@@ -1,16 +1,11 @@
-import RegisterForm from "./_RegisterForm";
+import ForgotPasswordForm from "./_ForgotPasswordForm"
 
-
-export default function Home() {
+export default function ForgotPassword() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center">
       <div className="container flex flex-col items-center justify-center gap-12 px-4">
-        <h1 className="text-4xl font-bold">
-          <span>Register</span>
-        </h1>
-        <RegisterForm />
+        <ForgotPasswordForm />
       </div>
     </main>
   )
 }
-
