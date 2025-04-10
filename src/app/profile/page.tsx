@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Mail, User, MapPin, Phone, UserCircle } from "lucide-react"
+import { getProfile } from "@/services/api/auth" // Importa la función getProfile
 
 interface UserProfile {
   fullName: string
@@ -13,21 +14,27 @@ interface UserProfile {
 
 export default function Profile() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
-    // Aquí deberías hacer la llamada a tu API para obtener los datos del usuario
-    // Por ahora usaremos datos de ejemplo
-    const mockProfile: UserProfile = {
-      fullName: "Juan Pérez",
-      email: "juan@ejemplo.com",
-      phoneNumber: "123456789",
-      address: "Calle Principal 123",
-      accountType: "normal"
+    const fetchProfile = async () => {
+      try {
+        const profileData = await getProfile() // Llama a la función getProfile
+        setUserProfile({
+          fullName: profileData.name,
+          email: profileData.email,
+          phoneNumber: profileData.phone,
+          address: profileData.address || "No especificada",
+          accountType: profileData.account_type,
+        })
+      } catch (error) {
+        console.error("Error al obtener el perfil:", error)
+      } finally {
+        setLoading(false)
+      }
     }
-    
-    setUserProfile(mockProfile)
-    setLoading(false)
+
+    fetchProfile()
   }, [])
 
   if (loading) {
@@ -42,7 +49,7 @@ export default function Profile() {
     const types = {
       normal: "Usuario Normal",
       delivery: "Repartidor",
-      seller: "Vendedor"
+      seller: "Vendedor",
     }
     return types[type as keyof typeof types] || type
   }

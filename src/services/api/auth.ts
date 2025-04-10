@@ -72,3 +72,22 @@ export const logout = async (refreshToken: string): Promise<boolean> => {
     return false;
   }
 };
+
+export const getProfile = async () => {
+  const token = localStorage.getItem('token'); // esto hay que cambiarlo a  accestoken
+  if (!token) {
+    throw new Error('No access token available');
+  }
+  
+  try {
+    const response = await apiClient.get('/auth/profile', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
