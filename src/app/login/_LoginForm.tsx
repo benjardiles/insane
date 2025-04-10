@@ -1,5 +1,5 @@
 "use client"
-
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Mail, Lock, CheckCircle2 } from "lucide-react"
+import { Mail, Lock, CheckCircle2, AlertCircle, } from "lucide-react"
+import { login } from "@/services/api/auth"
 
 const formSchema = z.object({
   email: z.string().email({ message: "Por favor ingresa un correo electrónico válido." }),
@@ -20,6 +21,8 @@ type FormValues = z.infer<typeof formSchema>
 export default function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [submitSuccess, setSubmitSuccess] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null)	
+  const router = useRouter()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -31,26 +34,18 @@ export default function LoginForm() {
 
   async function onSubmit(data: FormValues) {
     setIsSubmitting(true)
+    setError(null)
     try {
-      // Aquí deberías hacer la llamada a tu API
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-
-      if (!response.ok) throw new Error('Error al iniciar sesión')
-
+      await login(data.email, data.password)
       setSubmitSuccess(true)
+      router.push("/menu")
       setTimeout(() => {
         form.reset()
         setSubmitSuccess(false)
       }, 3000)
-    } catch (error) {
+    } catch (error:any) {
       console.error('Error:', error)
-      // Aquí deberías manejar el error apropiadamente
+      setError(error.response?.data?.error || "Error al iniciar sesión")
     } finally {
       setIsSubmitting(false)
     }
@@ -137,6 +132,13 @@ export default function LoginForm() {
               <div className="p-3 bg-[#A0C1B8] text-[#2D2A24] rounded-md text-center flex items-center justify-center space-x-2 animate-fadeIn">
                 <CheckCircle2 className="h-5 w-5 text-[#2D2A24]" />
                 <span>¡Inicio de sesión exitoso!</span>
+              </div>
+            )}
+
+            {error && (
+              <div className="p-3 bg-red-100 text-red-700 rounded-md text-center flex items-center justify-center space-x-2 animate-fadeIn">
+                <AlertCircle className="h-5 w-5 text-red-700" />
+                <span>{error}</span>
               </div>
             )}
           </form>
