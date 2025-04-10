@@ -38,7 +38,7 @@ export default function LoginForm() {
     try {
       await login(data.email, data.password)
       setSubmitSuccess(true)
-      router.push("/menu")
+      router.push("/profile") // Cambiado de "/menu" a "/profile"
       setTimeout(() => {
         form.reset()
         setSubmitSuccess(false)
