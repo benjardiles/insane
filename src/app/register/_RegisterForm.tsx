@@ -9,21 +9,17 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Mail, User, Phone, MapPin, UserCircle, CheckCircle2 } from "lucide-react"
+import { Mail, User, Phone, MapPin, UserCircle, CheckCircle2, Lock, AlertCircle } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { register } from "@/services/api/auth"
 
 const formSchema = z.object({
   email: z.string().email({ message: "Por favor ingresa un correo electrónico válido." }),
-  fullName: z
-    .string()
-    .min(2, { message: "El nombre debe tener al menos 2 caracteres." })
-    .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, {
-      message: "El nombre no debe contener caracteres especiales o números.",
-    }),
-  phoneNumber: z.string().min(8, { message: "El número de teléfono debe tener al menos 8 dígitos." }).regex(/^\d+$/, {
-    message: "El número de teléfono solo debe contener dígitos.",
-  }),
+  password: z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres." }),
+  name: z.string().min(2, { message: "El nombre debe tener al menos 2 caracteres." }),
+  phone: z.string().min(8, { message: "El número de teléfono debe tener al menos 8 dígitos." }),
   address: z.string().min(5, { message: "La dirección debe tener al menos 5 caracteres." }),
-  accountType: z.enum(["normal", "delivery", "seller"], {
+  account_type: z.enum(["usuario", "tienda", "delivery"], {
     required_error: "Por favor selecciona un tipo de cuenta.",
   }),
 })
@@ -31,30 +27,37 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>
 
 export default function RegisterForm() {
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+  const [submitSuccess, setSubmitSuccess] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
-      fullName: "",
-      phoneNumber: "",
+      password: "",
+      name: "",
+      phone: "",
       address: "",
+      account_type: "usuario",
     },
   })
 
-  function onSubmit(data: FormValues) {
+  async function onSubmit(data: FormValues) {
     setIsSubmitting(true)
-    setTimeout(() => {
-      console.log("Datos del formulario:", data)
-      setIsSubmitting(false)
+    setError(null)
+    try {
+      console.log(data)
+      await register(data)
       setSubmitSuccess(true)
-      setTimeout(() => {
-        form.reset()
-        setSubmitSuccess(false)
-      }, 3000)
-    }, 1500)
+      router.push("/profile")
+    } catch (error: any) {
+      console.error('Error:', error)
+      setError(error.response?.data?.error || "Error al registrar usuario")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -72,7 +75,7 @@ export default function RegisterForm() {
       </div>
 
       <CardHeader className="pb-6 relative z-10">
-        <CardTitle className="text-3xl font-bold text-center text-[#D05A44]">新規登録</CardTitle>
+        <CardTitle className="text-3xl font-bold text-center text-[#D05A44]">Register</CardTitle>
         <CardDescription className="text-center text-[#2D2A24] font-medium mt-1">
           Completa el formulario para disfrutar de nuestra cocina
         </CardDescription>
@@ -104,7 +107,29 @@ export default function RegisterForm() {
 
             <FormField
               control={form.control}
-              name="fullName"
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[#2D2A24] font-medium">Contraseña</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#D05A44] h-4 w-4" />
+                      <Input
+                        placeholder="••••••••"
+                        type="password"
+                        {...field}
+                        className="pl-10 bg-white text-[#2D2A24] border-[#A0C1B8] focus:border-[#D05A44] focus:ring-[#D05A44] placeholder:text-[#2D2A24]/50"
+                      />
+                      </div>
+                  </FormControl>
+                  <FormMessage className="text-[#D05A44] font-medium" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="name"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-[#2D2A24] font-medium">Nombre completo</FormLabel>
@@ -125,7 +150,7 @@ export default function RegisterForm() {
 
             <FormField
               control={form.control}
-              name="phoneNumber"
+              name="phone"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-[#2D2A24] font-medium">Número de teléfono</FormLabel>
@@ -168,7 +193,7 @@ export default function RegisterForm() {
 
             <FormField
               control={form.control}
-              name="accountType"
+              name="account_type"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-[#2D2A24] font-medium">Tipo de cuenta</FormLabel>
@@ -181,13 +206,13 @@ export default function RegisterForm() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-[#F7F3E9] text-[#2D2A24] border-[#A0C1B8]">
-                        <SelectItem value="normal" className="focus:bg-[#A0C1B8]/20">
+                        <SelectItem value="usuario" className="focus:bg-[#A0C1B8]/20">
                           Usuario normal
                         </SelectItem>
                         <SelectItem value="delivery" className="focus:bg-[#A0C1B8]/20">
                           Repartidor
                         </SelectItem>
-                        <SelectItem value="seller" className="focus:bg-[#A0C1B8]/20">
+                        <SelectItem value="tienda" className="focus:bg-[#A0C1B8]/20">
                           Vendedor
                         </SelectItem>
                       </SelectContent>
@@ -203,13 +228,20 @@ export default function RegisterForm() {
               className="w-full bg-[#D05A44] hover:bg-[#B84A37] transition-all duration-300 text-white font-medium py-2.5 rounded-md shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Registrando..." : "登録する"}
+              {isSubmitting ? "Registrando..." : "Register"}
             </Button>
 
             {submitSuccess && (
               <div className="p-3 bg-[#A0C1B8] text-[#2D2A24] rounded-md text-center flex items-center justify-center space-x-2 animate-fadeIn">
                 <CheckCircle2 className="h-5 w-5 text-[#2D2A24]" />
                 <span>¡Registro completado con éxito!</span>
+              </div>
+            )}
+
+            {error && (
+              <div className="p-3 bg-red-100 text-red-700 rounded-md text-center flex items-center justify-center space-x-2 animate-fadeIn">
+                <AlertCircle className="h-5 w-5 text-red-700" />
+                <span>{error}</span>
               </div>
             )}
           </form>

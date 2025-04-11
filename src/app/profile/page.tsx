@@ -1,5 +1,4 @@
-import RegisterForm from "./_RegisterForm";
-
+import Profile from "./_ProfileForm";
 
 export default function Home() {
   return (
@@ -8,7 +7,7 @@ export default function Home() {
         <h1 className="text-4xl font-bold">
           {/* <span>Register</span> */}
         </h1>
-        <RegisterForm />
+        <Profile />
       </div>
     </main>
   )
