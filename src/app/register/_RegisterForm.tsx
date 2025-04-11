@@ -75,7 +75,7 @@ export default function RegisterForm() {
       </div>
 
       <CardHeader className="pb-6 relative z-10">
-        <CardTitle className="text-3xl font-bold text-center text-[#D05A44]">新規登録</CardTitle>
+        <CardTitle className="text-3xl font-bold text-center text-[#D05A44]">Register</CardTitle>
         <CardDescription className="text-center text-[#2D2A24] font-medium mt-1">
           Completa el formulario para disfrutar de nuestra cocina
         </CardDescription>
@@ -228,7 +228,7 @@ export default function RegisterForm() {
               className="w-full bg-[#D05A44] hover:bg-[#B84A37] transition-all duration-300 text-white font-medium py-2.5 rounded-md shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Registrando..." : "登録する"}
+              {isSubmitting ? "Registrando..." : "Register"}
             </Button>
 
             {submitSuccess && (

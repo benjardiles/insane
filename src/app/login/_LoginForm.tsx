@@ -58,7 +58,7 @@ export default function LoginForm() {
       <div className="absolute -bottom-24 -left-24 w-48 h-48 rounded-full bg-[#A0C1B8] opacity-20" />
 
       <CardHeader className="pb-6 relative z-10">
-        <CardTitle className="text-3xl font-bold text-center text-[#D05A44]">ログイン</CardTitle>
+        <CardTitle className="text-3xl font-bold text-center text-[#D05A44]">Login</CardTitle>
         <CardDescription className="text-center text-[#2D2A24] font-medium mt-1">
           Ingresa tus credenciales para continuar
         </CardDescription>
@@ -125,7 +125,7 @@ export default function LoginForm() {
               className="w-full bg-[#D05A44] hover:bg-[#B84A37] transition-all duration-300 text-white font-medium py-2.5 rounded-md shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Iniciando sesión..." : "ログイン"}
+              {isSubmitting ? "Iniciando sesión..." : "Login"}
             </Button>
 
             {submitSuccess && (
