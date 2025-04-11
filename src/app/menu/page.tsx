@@ -1,16 +1,16 @@
 "use client"
-import { logout } from "@/services/api/auth" // Importa la función logout
-import { useRouter } from "next/navigation" // Importa useRouter para redirigir
+import { logout } from "@/services/api/auth"
+import { useRouter } from "next/navigation"
 
 export default function Menu() {
   const router = useRouter()
 
   const handleLogout = async () => {
-    const refreshToken = localStorage.getItem("token") // Obtén el refresh token
+    const refreshToken = localStorage.getItem("token")
     if (refreshToken) {
       const success = await logout(refreshToken)
       if (success) {
-        router.push("/") // Redirige al usuario a la página principal después de cerrar sesión
+        router.push("/")
       } else {
         console.error("Error al cerrar sesión")
       }
@@ -26,7 +26,7 @@ export default function Menu() {
         <p>hola ya ingresaste</p>
         <button
           onClick={handleLogout}
-          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+          className="bg-[#D05A44] text-white px-4 py-2 rounded hover:bg-[#B84A37] transition"
         >
           Cerrar sesión
         </button>

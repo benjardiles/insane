@@ -3,13 +3,10 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="grid grid-rows-[auto_1fr_auto] min-h-screen bg-[#F7F3E9]">
+    <div className="grid grid-rows-[auto_1fr_auto] min-h-screen">
       {/* Header */}
       <header className="w-full p-4">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold text-[#D05A44]">LosCC</h1>
-          <p className="text-[#2D2A24]">Wuatita LLena Corazón Contento</p>
-        </div>
+        
       </header>
 
       {/* Main Content */}
