@@ -1,5 +1,4 @@
 "use client"
-
 import { useState } from "react"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
@@ -9,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Mail, CheckCircle2 } from "lucide-react"
+import { sendResetPasswordEmail } from "@/services/api/auth"
 
 const formSchema = z.object({
   email: z.string().email({ message: "Por favor ingresa un correo electrónico válido." }),
@@ -30,25 +30,15 @@ export default function ForgotPasswordForm() {
   async function onSubmit(data: FormValues) {
     setIsSubmitting(true)
     try {
-      // Aquí deberías hacer la llamada a tu API
-      const response = await fetch('/api/forgot-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-
-      if (!response.ok) throw new Error('Error al enviar el correo')
-
+      await sendResetPasswordEmail(data.email);
       setSubmitSuccess(true)
       setTimeout(() => {
         form.reset()
         setSubmitSuccess(false)
       }, 3000)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error:', error)
-      // Aquí deberías manejar el error apropiadamente
+      //agregar un tipo correo no existe
     } finally {
       setIsSubmitting(false)
     }

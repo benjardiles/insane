@@ -91,3 +91,15 @@ export const getProfile = async () => {
     throw error;
   }
 };
+
+export const sendResetPasswordEmail = async (email: string) => {
+  try {
+    const response = await apiClient.post('/auth/forgot-password', {
+      email
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error sending reset password email:', error);
+    throw error;
+  }
+};
