@@ -191,37 +191,7 @@ export default function RegisterForm() {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="account_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-[#2D2A24] font-medium">Tipo de cuenta</FormLabel>
-                  <div className="relative">
-                    <UserCircle className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#D05A44] h-4 w-4 z-10" />
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="pl-10 bg-white text-[#2D2A24] border-[#A0C1B8] focus:border-[#D05A44] focus:ring-[#D05A44]">
-                          <SelectValue placeholder="Selecciona un tipo de cuenta" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-[#F7F3E9] text-[#2D2A24] border-[#A0C1B8]">
-                        <SelectItem value="usuario" className="focus:bg-[#A0C1B8]/20">
-                          Usuario normal
-                        </SelectItem>
-                        <SelectItem value="delivery" className="focus:bg-[#A0C1B8]/20">
-                          Repartidor
-                        </SelectItem>
-                        <SelectItem value="tienda" className="focus:bg-[#A0C1B8]/20">
-                          Vendedor
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <FormMessage className="text-[#D05A44] font-medium" />
-                </FormItem>
-              )}
-            />
+           
 
             <Button
               type="submit"

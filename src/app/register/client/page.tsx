@@ -1,11 +1,12 @@
-import ForgotPasswordForm from "./_ForgotPasswordForm"
+import RegisterFormClient from "./_RegisterFormClient";
 
-export default function ForgotPassword() {
+export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center py-12">
       <div className="container flex flex-col items-center justify-center gap-12 px-4">
-        <ForgotPasswordForm />
+        <RegisterFormClient />
       </div>
     </main>
   )
 }
+
