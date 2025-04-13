@@ -14,12 +14,12 @@ export default function Home() {
           </p>
           <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
             <div className="rounded-md shadow">
-              <Link
+              {/* <Link
                 href="/register/client"
                 className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[#D05A44] hover:bg-[#B84A37] md:py-4 md:text-lg md:px-10"
               >
                 Comenzar
-              </Link>
+              </Link> */}
             </div>
           </div>
         </div>
