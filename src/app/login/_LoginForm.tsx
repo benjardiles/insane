@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Mail, Lock, CheckCircle2, AlertCircle, } from "lucide-react"
 import { login } from "@/services/api/auth"
 
+
 const formSchema = z.object({
   email: z.string().email({ message: "Por favor ingresa un correo electrónico válido." }),
   password: z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres." }),
