@@ -1,18 +1,56 @@
-"use client"
+"use client";
 import axios from 'axios';
 
 export const apiClient = axios.create({
   baseURL: 'http://localhost:3000/api', // Nota: cambiado de https a http para desarrollo local
 });
 
-interface RegisterData {
+// Interfaces para cada tipo de usuario
+interface BaseUserData {
   email: string;
   name: string;
   phone: string;
   password: string;
-  address?: string;
-  account_type: 'admin' | 'usuario' | 'tienda' | 'delivery';
 }
+
+interface StoreUserData extends BaseUserData {
+  store_name: string;
+  store_address: string;
+  store_phone: string;
+}
+
+interface ClientUserData extends BaseUserData {
+  address: string;
+}
+
+interface DeliveryUserData extends BaseUserData {
+  //no tiene
+}
+
+interface AdminUserData extends BaseUserData {
+  // ver que añadirle
+}
+
+type UserData = StoreUserData | ClientUserData | DeliveryUserData | AdminUserData;
+
+
+export const register = async (userData: UserData) => {
+  try {
+    const response = await apiClient.post('/auth/register', userData);
+
+    // Procesar la respuesta
+    const { access_token, user } = response.data;
+    localStorage.setItem('token', access_token);
+
+    // Configurar el token para futuras solicitudes
+    apiClient.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+
+    return user;
+  } catch (error) {
+    console.error('Error during registration:', error);
+    throw error;
+  }
+};
 
 export const login = async (email: string, password: string) => {
   const response = await apiClient.post('/auth/login', { email, password });
@@ -22,27 +60,6 @@ export const login = async (email: string, password: string) => {
   localStorage.setItem('token', access_token);
   
   // Configura el token para futuras solicitudes
-  apiClient.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-  
-  return user;
-};
-
-export const register = async (userData: RegisterData) => {
-  // Reordenamos los campos en el orden esperado
-  const orderedData = {
-    email: userData.email,
-    name: userData.name,
-    phone: userData.phone,
-    password: userData.password,
-    address: userData.address,
-    account_type: userData.account_type
-  };
-
-  const response = await apiClient.post('/auth/register', orderedData);
-  
-  const { access_token, user } = response.data;
-  localStorage.setItem('token', access_token);
-  
   apiClient.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
   
   return user;
@@ -74,7 +91,7 @@ export const logout = async (refreshToken: string): Promise<boolean> => {
 };
 
 export const getProfile = async () => {
-  const token = localStorage.getItem('token'); // esto hay que cambiarlo a  accestoken
+  const token = localStorage.getItem('token'); 
   if (!token) {
     throw new Error('No access token available');
   }
