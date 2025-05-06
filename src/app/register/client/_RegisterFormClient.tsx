@@ -19,9 +19,6 @@ const formSchema = z.object({
   name: z.string().min(2, { message: "El nombre debe tener al menos 2 caracteres." }),
   phone: z.string().min(8, { message: "El número de teléfono debe tener al menos 8 dígitos." }),
   address: z.string().min(5, { message: "La dirección debe tener al menos 5 caracteres." }),
-  account_type: z.enum(["usuario", "tienda", "delivery"], {
-    required_error: "Por favor selecciona un tipo de cuenta.",
-  }),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -36,11 +33,10 @@ export default function RegisterForm() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
-      password: "",
       name: "",
       phone: "",
+      password: "",
       address: "",
-      account_type: "usuario",
     },
   })
 

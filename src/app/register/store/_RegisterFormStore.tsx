@@ -8,14 +8,18 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Store, MapPin, Phone, CheckCircle2, AlertCircle } from "lucide-react"
+import { Store, MapPin, Phone, CheckCircle2, AlertCircle, Mail, User, Lock } from "lucide-react"
 import { useRouter } from "next/navigation"
-// import { registerStore } from "@/services/api/tentant" // You'll need to create this service
+import { register } from "@/services/api/auth"
 
 const formSchema = z.object({
-  name: z.string().min(2, { message: "Store name must be at least 2 characters." }),
-  address: z.string().min(5, { message: "Address must be at least 5 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
+  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   phone: z.string().min(8, { message: "Phone number must be at least 8 digits." }),
+  store_name: z.string().min(2, { message: "Store name must be at least 2 characters." }),
+  store_address: z.string().min(5, { message: "Store address must be at least 5 characters." }),
+  store_phone: z.string().min(8, { message: "Store phone must be at least 8 digits." }),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -29,9 +33,13 @@ export default function StoreForm() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      email: "",
+      password: "",
       name: "",
-      address: "",
       phone: "",
+      store_name: "",
+      store_address: "",
+      store_phone: "",
     },
   })
 
@@ -39,9 +47,10 @@ export default function StoreForm() {
     setIsSubmitting(true)
     setError(null)
     try {
-      // await registerStore(data)
+      console.log(data)
+      await register(data)
       setSubmitSuccess(true)
-      router.push("/store/profile") // You'll need to create this route
+      router.push("/profile")
     } catch (error: any) {
       console.error('Error:', error)
       setError(error.response?.data?.error || "Error registering store")
@@ -68,7 +77,94 @@ export default function StoreForm() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FormField
               control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[#2D2A24] font-medium">Email</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#D05A44] h-4 w-4" />
+                      <Input
+                        placeholder="store@example.com"
+                        type="email"
+                        {...field}
+                        className="pl-10 bg-white text-[#2D2A24] border-[#A0C1B8] focus:border-[#D05A44] focus:ring-[#D05A44] placeholder:text-[#2D2A24]/50"
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-[#D05A44] font-medium" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[#2D2A24] font-medium">Password</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#D05A44] h-4 w-4" />
+                      <Input
+                        placeholder="••••••••"
+                        type="password"
+                        {...field}
+                        className="pl-10 bg-white text-[#2D2A24] border-[#A0C1B8] focus:border-[#D05A44] focus:ring-[#D05A44] placeholder:text-[#2D2A24]/50"
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-[#D05A44] font-medium" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[#2D2A24] font-medium">Your Name</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#D05A44] h-4 w-4" />
+                      <Input
+                        placeholder="John Doe"
+                        {...field}
+                        className="pl-10 bg-white text-[#2D2A24] border-[#A0C1B8] focus:border-[#D05A44] focus:ring-[#D05A44] placeholder:text-[#2D2A24]/50"
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-[#D05A44] font-medium" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[#2D2A24] font-medium">Your Phone</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#D05A44] h-4 w-4" />
+                      <Input
+                        placeholder="912345678"
+                        type="tel"
+                        {...field}
+                        className="pl-10 bg-white text-[#2D2A24] border-[#A0C1B8] focus:border-[#D05A44] focus:ring-[#D05A44] placeholder:text-[#2D2A24]/50"
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-[#D05A44] font-medium" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="store_name"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-[#2D2A24] font-medium">Store Name</FormLabel>
@@ -89,7 +185,7 @@ export default function StoreForm() {
 
             <FormField
               control={form.control}
-              name="address"
+              name="store_address"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-[#2D2A24] font-medium">Store Address</FormLabel>
@@ -110,7 +206,7 @@ export default function StoreForm() {
 
             <FormField
               control={form.control}
-              name="phone"
+              name="store_phone"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-[#2D2A24] font-medium">Store Phone</FormLabel>

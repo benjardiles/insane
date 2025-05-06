@@ -9,14 +9,15 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Mail, User, Phone, CheckCircle2, AlertCircle } from "lucide-react"
+import { Mail, User, Phone, CheckCircle2, AlertCircle, Lock } from "lucide-react"
 import { useRouter } from "next/navigation"
-// import { registerDelivery } from "@/services/api/auth"
+import { register } from "@/services/api/auth"
 
 const formSchema = z.object({
-  nombre: z.string().min(2, { message: "El nombre debe tener al menos 2 caracteres." }),
-  correo: z.string().email({ message: "Por favor ingresa un correo electrónico válido." }),
-  telefono: z.string().min(8, { message: "El número de teléfono debe tener al menos 8 dígitos." }),
+  email: z.string().email({ message: "Por favor ingresa un correo electrónico válido." }),
+  password: z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres." }),
+  name: z.string().min(2, { message: "El nombre debe tener al menos 2 caracteres." }),
+  phone: z.string().min(8, { message: "El número de teléfono debe tener al menos 8 dígitos." }),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -30,9 +31,10 @@ export default function RegisterFormDelivery() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      nombre: "",
-      correo: "",
-      telefono: "",
+      email: "",
+      password: "",
+      name: "",
+      phone: "",
     },
   })
 
@@ -40,8 +42,8 @@ export default function RegisterFormDelivery() {
     setIsSubmitting(true)
     setError(null)
     try {
-      // Aquí irá la llamada a la API
-      // await registerDelivery(data)
+      console.log(data)
+      await register(data)
       setSubmitSuccess(true)
       router.push("/delivery/profile") // Ajusta esta ruta según tu estructura
     } catch (error: any) {
@@ -72,28 +74,7 @@ export default function RegisterFormDelivery() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FormField
               control={form.control}
-              name="nombre"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-[#2D2A24] font-medium">Nombre completo</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#D05A44] h-4 w-4" />
-                      <Input
-                        placeholder="Juan Pérez"
-                        {...field}
-                        className="pl-10 bg-white text-[#2D2A24] border-[#A0C1B8] focus:border-[#D05A44] focus:ring-[#D05A44] placeholder:text-[#2D2A24]/50"
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage className="text-[#D05A44] font-medium" />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="correo"
+              name="email"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-[#2D2A24] font-medium">Correo electrónico</FormLabel>
@@ -115,7 +96,50 @@ export default function RegisterFormDelivery() {
 
             <FormField
               control={form.control}
-              name="telefono"
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[#2D2A24] font-medium">Contraseña</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#D05A44] h-4 w-4" />
+                      <Input
+                        placeholder="••••••••"
+                        type="password"
+                        {...field}
+                        className="pl-10 bg-white text-[#2D2A24] border-[#A0C1B8] focus:border-[#D05A44] focus:ring-[#D05A44] placeholder:text-[#2D2A24]/50"
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-[#D05A44] font-medium" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-[#2D2A24] font-medium">Nombre completo</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#D05A44] h-4 w-4" />
+                      <Input
+                        placeholder="Juan Pérez"
+                        {...field}
+                        className="pl-10 bg-white text-[#2D2A24] border-[#A0C1B8] focus:border-[#D05A44] focus:ring-[#D05A44] placeholder:text-[#2D2A24]/50"
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-[#D05A44] font-medium" />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="phone"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-[#2D2A24] font-medium">Número de teléfono</FormLabel>
