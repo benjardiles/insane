@@ -1,7 +1,10 @@
 "use client"
 import { useEffect, useState } from "react"
-import { getProfile } from "@/services/api/auth"
-import { StoreOwnerView, NormalUserView, DeliveryUserView, AdminUserView } from "@/app/profile/AccountTypeViews"
+import { StoreOwnerView } from "./AccountTypeViews/StoreOwnerView"
+import { NormalUserView } from "./AccountTypeViews/NormalUserView"
+import { DeliveryUserView } from "./AccountTypeViews/DeliveryUserView"
+import { AdminUserView } from "./AccountTypeViews/AdminUserView"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface UserProfile {
   fullName: string
@@ -15,32 +18,23 @@ interface UserProfile {
 }
 
 export default function Profile() {
+  const { user, loading } = useAuth()
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
-  const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const profileData = await getProfile() // Llama a la función getProfile
-        setUserProfile({
-          fullName: profileData.name,
-          email: profileData.email,
-          phoneNumber: profileData.phone,
-          address: profileData.address || "No especificada",
-          accountType: profileData.account_type,
-          storeName: profileData.store_name,
-          storeAddress: profileData.store_address,
-          storePhone: profileData.store_phone
-        })
-      } catch (error) {
-        console.error("Error al obtener el perfil:", error)
-      } finally {
-        setLoading(false)
-      }
+    if (user) {
+      setUserProfile({
+        fullName: user.name,
+        email: user.email,
+        phoneNumber: user.phone,
+        address: user.address || "No especificada",
+        accountType: user.account_type,
+        storeName: user.store_name,
+        storeAddress: user.store_address,
+        storePhone: user.store_phone
+      })
     }
-
-    fetchProfile()
-  }, [])
+  }, [user])
 
   if (loading) {
     return (
