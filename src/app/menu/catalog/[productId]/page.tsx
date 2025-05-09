@@ -9,22 +9,22 @@ import ReviewSection from '@/components/catalog/ReviewSection';
 
 // Mock data for demonstration
 const MOCK_PRODUCT = {
-  id: '1',
-  name: 'Fresh Organic Vegetables',
-  description: 'A selection of fresh, locally grown organic vegetables. This bundle includes carrots, tomatoes, lettuce, and bell peppers. All produce is harvested within 24 hours of delivery to ensure maximum freshness.',
-  price: 12.99,
-  image: '/images/products/vegetables.jpg',
+  id: '2',
+  name: 'Ají Rojo Chileno',
+  description: 'Un puñado de ajíes rojos vibrantes y picantes. Ideales para darle sazón y picor a tus comidas. Cultivados en tierras chilenas y cosechados en su punto justo.',
+  price: 8.99,
+  image: '/images/products/aji.jpg',
   store: {
-    id: 'store1',
-    name: 'Green Market',
-    rating: 4.7,
+    id: 'store2',
+    name: 'El Rincón del Sabor',
+    rating: 4.8,
   },
-  tags: ['organic', 'vegetarian', 'vegan', 'local'],
+  tags: ['picante', 'chileno', 'fresco'],
   nutritionalInfo: {
-    calories: 120,
-    protein: 3,
-    carbs: 20,
-    fat: 1,
+    calories: 40,
+    protein: 2,
+    carbs: 9,
+    fat: 0.4,
   },
   availableOptions: {
     delivery: true,
@@ -35,24 +35,24 @@ const MOCK_PRODUCT = {
 const MOCK_REVIEWS = [
   {
     id: 'r1',
-    user: 'John D.',
+    user: 'Ana P.',
     rating: 5,
-    comment: 'The vegetables were incredibly fresh! Will definitely order again.',
-    date: '2023-05-15',
+    comment: '¡Estos ajíes están fileteados! Súper frescos y con el picor justo.',
+    date: '2023-06-01',
   },
   {
     id: 'r2',
-    user: 'Sarah M.',
+    user: 'Carlos R.',
     rating: 4,
-    comment: 'Great quality produce, but one tomato was slightly bruised.',
-    date: '2023-05-10',
+    comment: 'Buena calidad, pero un poco demasiado picantes para mi paladar.',
+    date: '2023-05-28',
   },
   {
     id: 'r3',
-    user: 'Michael T.',
+    user: 'Emilia K.',
     rating: 5,
-    comment: 'Excellent service and the vegetables lasted much longer than store-bought ones.',
-    date: '2023-05-05',
+    comment: 'Perfectos para preparar pebre. ¡Voy a seguir comprando!',
+    date: '2023-05-20',
   },
 ];
 
@@ -60,15 +60,12 @@ export default function ProductDetailPage() {
   const params = useParams();
   const productId = params.productId as string;
   
-  // In a real app, you would fetch the product data based on the ID
-  // For now, we'll just use the mock data
   const product = MOCK_PRODUCT;
   const reviews = MOCK_REVIEWS;
   
   const [purchaseMessage, setPurchaseMessage] = useState<string | null>(null);
 
   const handlePurchase = (quantity: number, method: 'delivery' | 'pickup') => {
-    // In a real app, this would add the item to a cart or process the order
     setPurchaseMessage(
       `Added ${quantity} ${quantity === 1 ? 'item' : 'items'} to cart with ${method} option.`
     );

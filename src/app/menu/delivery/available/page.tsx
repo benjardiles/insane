@@ -10,43 +10,43 @@ const MOCK_AVAILABLE_ORDERS = [
   {
     id: 'ORD-001',
     store: {
-      name: 'Green Market',
-      address: '123 Main St, Anytown, USA',
+      name: 'Mercado Verde',
+      address: 'Av. Providencia 1234, Santiago, Chile',
     },
     customer: {
-      address: '456 Oak Ave, Anytown, USA',
+      address: 'Calle Los Olmos 456, Ñuñoa, Santiago, Chile',
       distance: 2.3,
     },
     items: 3,
-    total: 35.99,
+    total: 28990,
     estimatedTime: 25,
   },
   {
     id: 'ORD-002',
     store: {
-      name: 'Local Bakery',
-      address: '789 Pine St, Anytown, USA',
+      name: 'Panadería Local',
+      address: 'Calle Las Rosas 789, La Florida, Santiago, Chile',
     },
     customer: {
-      address: '321 Elm St, Anytown, USA',
+      address: 'Av. Los Álamos 321, Puente Alto, Santiago, Chile',
       distance: 1.8,
     },
     items: 2,
-    total: 18.50,
+    total: 14500,
     estimatedTime: 20,
   },
   {
     id: 'ORD-003',
     store: {
-      name: 'Farm Fresh',
-      address: '555 Maple Ave, Anytown, USA',
+      name: 'Granja Fresca',
+      address: 'Camino El Bosque 555, Maipú, Santiago, Chile',
     },
     customer: {
-      address: '777 Cedar Rd, Anytown, USA',
+      address: 'Calle Los Pinos 777, Las Condes, Santiago, Chile',
       distance: 3.5,
     },
     items: 5,
-    total: 42.75,
+    total: 35990,
     estimatedTime: 30,
   },
 ];

@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Mail, Lock, CheckCircle2, AlertCircle, } from "lucide-react"
-import { login } from "@/services/api/auth"
+import { login, getProfile } from "@/services/api/auth"
+import { useAuth } from "@/contexts/AuthContext"
 
 
 const formSchema = z.object({
@@ -22,8 +23,9 @@ type FormValues = z.infer<typeof formSchema>
 export default function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const [submitSuccess, setSubmitSuccess] = useState<boolean>(false)
-  const [error, setError] = useState<string | null>(null)	
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const { refreshUserData } = useAuth()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -37,9 +39,21 @@ export default function LoginForm() {
     setIsSubmitting(true)
     setError(null)
     try {
-      await login(data.email, data.password)
+      const user = await login(data.email, data.password)
       setSubmitSuccess(true)
-      router.push("/profile") // Cambiado de "/menu" a "/profile"
+
+      // Actualizar los datos del usuario en el contexto
+      await refreshUserData()
+
+      // Redirigir según el tipo de cuenta
+      if (user.account_type === "tienda" || user.account_type === "store" || user.account_type === "seller") {
+        router.push("/menu/store/dashboard")
+      } else if (user.account_type === "delivery") {
+        router.push("/menu/delivery/available")
+      } else {
+        router.push("/menu/catalog")
+      }
+
       setTimeout(() => {
         form.reset()
         setSubmitSuccess(false)
