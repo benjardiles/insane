@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useState } from "react"
 import { getProfile } from "@/services/api/auth"
-import { StoreOwnerView, NormalUserView, DeliveryUserView, AdminUserView } from "@/components/AccountTypeViews"
+import { StoreOwnerView, NormalUserView, DeliveryUserView, AdminUserView } from "@/app/profile/AccountTypeViews"
 
 interface UserProfile {
   fullName: string
@@ -21,7 +21,7 @@ export default function Profile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const profileData = await getProfile()
+        const profileData = await getProfile() // Llama a la función getProfile
         setUserProfile({
           fullName: profileData.name,
           email: profileData.email,
@@ -55,11 +55,11 @@ export default function Profile() {
     if (!userProfile) return null
 
     switch (userProfile.accountType) {
-      case "TIENDA":
+      case "tienda":
         return <StoreOwnerView userProfile={userProfile} />
-      case "DELIVERY":
+      case "delivery":
         return <DeliveryUserView userProfile={userProfile} />
-      case "ADMIN":
+      case "admin":
         return <AdminUserView userProfile={userProfile} />
       default:
         return <NormalUserView userProfile={userProfile} />

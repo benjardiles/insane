@@ -45,7 +45,7 @@ export default function RegisterFormDelivery() {
       console.log(data)
       await register(data)
       setSubmitSuccess(true)
-      router.push("/delivery/profile") // Ajusta esta ruta según tu estructura
+      router.push("/profile") 
     } catch (error: any) {
       console.error('Error:', error)
       setError(error.response?.data?.error || "Error al registrar repartidor")
