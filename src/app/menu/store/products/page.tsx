@@ -1,134 +1,194 @@
 'use client';
-
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { storeAPI } from '@/services/api/store';
 import StoreLayout from '@/components/layouts/StoreLayout';
+import { Button } from '@/components/ui/button';
 import ProductsList from '@/components/store/ProductsList';
 import ProductForm from '@/components/store/ProductForm';
-import { Button } from '@/components/ui/button';
 
-// Mock data for demonstration
-const MOCK_PRODUCTS = [
-  {
-    id: '1',
-    name: 'Palta Hass',
-    price: 3490,
-    stock: 50,
-    category: 'frutas',
-    image: '/images/products/palta.jpg',
-  },
-  {
-    id: '2',
-    name: 'Pan Marraqueta',
-    price: 1500,
-    stock: 100,
-    category: 'panadería',
-    image: '/images/products/marraqueta.jpg',
-  },
-  {
-    id: '3',
-    name: 'Leche Entera Colún',
-    price: 1200,
-    stock: 40,
-    category: 'lácteos',
-    image: '/images/products/leche.jpg',
-  },
-  {
-    id: '4',
-    name: 'Carne Molida Premium',
-    price: 8990,
-    stock: 20,
-    category: 'carnes',
-    image: '/images/products/carne.jpg',
-  },
-  {
-    id: '5',
-    name: 'Fideos Sin Gluten',
-    price: 2500,
-    stock: 30,
-    category: 'alimentos preparados',
-    image: '/images/products/fideos.jpg',
-  },
+// Definir las categorías disponibles
+const PRODUCT_CATEGORIES = [
+  'Comida Rápida',
+  'Bebidas',
+  'Postres',
+  'Ensaladas',
+  'Platos Principales',
+  'Aperitivos',
+  'Vegetariano',
+  'Vegano',
+  'Sin Gluten',
+  'Otros'
 ];
 
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  category: string;
+  tags: string[];
+  deliveryOptions: {
+    delivery: boolean;
+    pickup: boolean;
+  };
+  nutritionalInfo?: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+  image: string; // Changed from imageUrl to image to match ProductsList component
+}
+
 export default function ProductsPage() {
-  const [products, setProducts] = useState(MOCK_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await storeAPI.getProducts();
+      const rawProducts = response.data || response || [];
+
+      // Transform API data to match component interface
+      const transformedProducts: Product[] = rawProducts.map((product: any) => ({
+        id: product.id || product._id || Math.random().toString(),
+        name: product.name || 'Producto Sin Nombre',
+        description: product.description || '',
+        price: product.price || 0,
+        stock: product.stock || 0,
+        category: product.category || 'Otros',
+        tags: product.tags || [],
+        deliveryOptions: product.deliveryOptions || { delivery: true, pickup: true },
+        nutritionalInfo: product.nutritionalInfo,
+        image: product.image || product.imageUrl || '/placeholder-product.jpg'
+      }));
+
+      setProducts(transformedProducts);
+    } catch (err: any) {
+      console.error('Error fetching products:', err);
+      setError(err.message || 'No se pudieron cargar los productos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const handleAddProduct = () => {
     setEditingProduct(null);
     setShowForm(true);
   };
 
-  const handleEditProduct = (productId: string) => {
-    // In a real app, you would fetch the product details from the API
-    // For now, we'll just find it in our mock data
-    const product = products.find(p => p.id === productId);
-    if (product) {
-      setEditingProduct({
-        ...product,
-        description: 'Sample description for this product.',
-        tags: ['organic', 'local'],
-        deliveryOptions: {
-          delivery: true,
-          pickup: true,
-        },
-        nutritionalInfo: {
-          calories: 120,
-          protein: 3,
-          carbs: 20,
-          fat: 1,
-        },
-      });
-      setShowForm(true);
-    }
-  };
+  const handleEditProduct = async (productId: string) => {
+    try {
+      const rawProduct = await storeAPI.getProduct(productId);
 
-  const handleDeleteProduct = (productId: string) => {
-    // In a real app, you would call an API to delete the product
-    // For now, we'll just filter it out of our mock data
-    if (confirm('Are you sure you want to delete this product?')) {
-      setProducts(products.filter(p => p.id !== productId));
-    }
-  };
-
-  const handleSubmitProduct = (formData: any) => {
-    // In a real app, you would call an API to save the product
-    // For now, we'll just update our mock data
-    if (editingProduct) {
-      // Update existing product
-      setProducts(products.map(p => 
-        p.id === editingProduct.id ? { ...p, ...formData } : p
-      ));
-    } else {
-      // Add new product
-      const newProduct = {
-        ...formData,
-        id: `${products.length + 1}`,
-        image: '/images/products/default.jpg',
+      // Transform API data to match form interface
+      const transformedProduct: Product = {
+        id: rawProduct.id || rawProduct._id || productId,
+        name: rawProduct.name || '',
+        description: rawProduct.description || '',
+        price: rawProduct.price || 0,
+        stock: rawProduct.stock || 0,
+        category: rawProduct.category || 'Otros',
+        tags: rawProduct.tags || [],
+        deliveryOptions: rawProduct.deliveryOptions || { delivery: true, pickup: true },
+        nutritionalInfo: rawProduct.nutritionalInfo || {
+          calories: 0,
+          protein: 0,
+          carbs: 0,
+          fat: 0
+        },
+        image: rawProduct.image || rawProduct.imageUrl || '/placeholder-product.jpg'
       };
-      setProducts([...products, newProduct]);
+
+      setEditingProduct(transformedProduct);
+      setShowForm(true);
+    } catch (err) {
+      console.error(`Error fetching product ${productId}:`, err);
+      alert('No se pudo cargar el producto para editar');
     }
-    setShowForm(false);
+  };
+
+  const handleDeleteProduct = async (productId: string) => {
+    if (confirm('¿Estás seguro de que quieres eliminar este producto?')) {
+      try {
+        await storeAPI.deleteProduct(productId);
+        // Actualizar la lista de productos
+        fetchProducts();
+      } catch (err) {
+        console.error(`Error deleting product ${productId}:`, err);
+        alert('No se pudo eliminar el producto');
+      }
+    }
+  };
+
+  const handleSubmitProduct = async (formData: {
+    id?: string;
+    name: string;
+    description: string;
+    price: number;
+    stock: number;
+    category: string;
+    tags: string[];
+    deliveryOptions: {
+      delivery: boolean;
+      pickup: boolean;
+    };
+    nutritionalInfo?: {
+      calories: number;
+      protein: number;
+      carbs: number;
+      fat: number;
+    };
+  }) => {
+    try {
+      if (editingProduct) {
+        // Actualizar producto existente
+        await storeAPI.updateProduct(editingProduct.id as string, formData);
+      } else {
+        // Crear nuevo producto
+        await storeAPI.createProduct(formData);
+      }
+      // Actualizar la lista de productos
+      fetchProducts();
+      setShowForm(false);
+    } catch (err) {
+      console.error('Error saving product:', err);
+      alert('No se pudo guardar el producto');
+    }
   };
 
   const handleCancelForm = () => {
     setShowForm(false);
   };
 
+  if (loading && products.length === 0) return <StoreLayout><div>Cargando...</div></StoreLayout>;
+  if (error) return <StoreLayout><div>Error: {error}</div></StoreLayout>;
+
   return (
     <StoreLayout>
       <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Products</h1>
-          <p className="text-gray-600">Manage your store's products</p>
+          <h1 className="text-3xl font-bold">Productos</h1>
+          <p className="text-gray-600">Gestiona los productos de tu tienda</p>
         </div>
-        <Button onClick={handleAddProduct}>Add New Product</Button>
+        <Button onClick={handleAddProduct}>Añadir Nuevo Producto</Button>
       </div>
 
       {showForm ? (
         <ProductForm
-          initialData={editingProduct}
+          initialData={editingProduct as any}
           onSubmit={handleSubmitProduct}
           onCancel={handleCancelForm}
         />

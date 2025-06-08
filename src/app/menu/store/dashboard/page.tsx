@@ -1,85 +1,54 @@
 'use client';
-
-import React from 'react';
+import { useState, useEffect } from 'react';
+import { storeAPI } from '@/services/api/store';
 import StoreLayout from '@/components/layouts/StoreLayout';
-import DashboardSummary from '@/components/store/DashboardSummary';
+import DashboardStats from '@/components/store/DashboardSummary';
 import RecentOrders from '@/components/store/RecentOrders';
 
-// Mock data for demonstration
-const MOCK_STATS = {
-  totalProducts: 24,
-  pendingOrders: 5,
-  completedOrders: 42,
-  totalRevenue: 1250.75,
-  averageRating: 4.7,
-};
+export default function DashboardPage() {
+  const [stats, setStats] = useState(null);
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-const MOCK_RECENT_ORDERS = [
-  {
-    id: 'ORD-001',
-    customer: 'Juan Pérez',
-    date: '2023-05-15 14:30',
-    total: 35000,
-    status: 'pending' as const,
-    items: [
-      { name: 'Verduras Orgánicas', quantity: 1 },
-      { name: 'Pan Fresco', quantity: 2 },
-    ],
-  },
-  {
-    id: 'ORD-002',
-    customer: 'María González',
-    date: '2023-05-15 12:15',
-    total: 42500,
-    status: 'processing' as const,
-    items: [
-      { name: 'Huevos de Campo', quantity: 1 },
-      { name: 'Leche Orgánica', quantity: 1 },
-      { name: 'Pasta Sin Gluten', quantity: 1 },
-    ],
-  },
-  {
-    id: 'ORD-003',
-    customer: 'Roberto López',
-    date: '2023-05-14 16:45',
-    total: 28750,
-    status: 'delivered' as const,
-    items: [
-      { name: 'Carne de Res Alimentada con Pasto', quantity: 1 },
-      { name: 'Papas Orgánicas', quantity: 1 },
-    ],
-  },
-  {
-    id: 'ORD-004',
-    customer: 'Ana Fernández',
-    date: '2023-05-14 10:20',
-    total: 15990,
-    status: 'delivered' as const,
-    items: [
-      { name: 'Torta de Chocolate Vegana', quantity: 1 },
-    ],
-  },
-];
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        // Obtener estadísticas del dashboard
+        const dashboardStats = await storeAPI.getDashboardStats();
+        setStats(dashboardStats);
+        
+        // Obtener órdenes recientes (limitadas a 5)
+        const ordersResponse = await storeAPI.getOrders(1, 5);
+        setRecentOrders(ordersResponse.data || []);
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        setError('No se pudieron cargar los datos del dashboard');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-export default function StoreDashboardPage() {
+    fetchDashboardData();
+  }, []);
+
+  if (loading) return <StoreLayout><div>Cargando...</div></StoreLayout>;
+  if (error) return <StoreLayout><div>Error: {error}</div></StoreLayout>;
+
   return (
     <StoreLayout>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Store Dashboard</h1>
-        <p className="text-gray-600">Overview of your store's performance</p>
-      </div>
-
-      <div className="mb-8">
-        <DashboardSummary stats={MOCK_STATS} />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+      
+      {stats && <DashboardStats stats={stats} />}
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
         <div>
-          <RecentOrders orders={MOCK_RECENT_ORDERS} />
+          <RecentOrders orders={recentOrders} />
         </div>
         <div>
           <div className="bg-white p-6 rounded-lg border shadow-sm h-full">
-            <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+            <h2 className="text-xl font-semibold mb-4">Acciones Rápidas</h2>
             <div className="space-y-4">
               <a 
                 href="/menu/store/products"
@@ -88,8 +57,8 @@ export default function StoreDashboardPage() {
                 <div className="flex items-center">
                   <div className="text-2xl mr-4">📦</div>
                   <div>
-                    <h3 className="font-medium">Manage Products</h3>
-                    <p className="text-sm text-gray-500">Add, edit or remove products from your catalog</p>
+                    <h3 className="font-medium">Gestionar Productos</h3>
+                    <p className="text-sm text-gray-500">Añadir, editar o eliminar productos de tu catálogo</p>
                   </div>
                 </div>
               </a>
@@ -100,20 +69,8 @@ export default function StoreDashboardPage() {
                 <div className="flex items-center">
                   <div className="text-2xl mr-4">📋</div>
                   <div>
-                    <h3 className="font-medium">View All Orders</h3>
-                    <p className="text-sm text-gray-500">See all orders and their statuses</p>
-                  </div>
-                </div>
-              </a>
-              <a 
-                href="/menu/store/suppliers"
-                className="block p-4 border rounded-lg hover:bg-gray-50"
-              >
-                <div className="flex items-center">
-                  <div className="text-2xl mr-4">🚚</div>
-                  <div>
-                    <h3 className="font-medium">Manage Suppliers</h3>
-                    <p className="text-sm text-gray-500">Add or edit your supplier relationships</p>
+                    <h3 className="font-medium">Gestionar Pedidos</h3>
+                    <p className="text-sm text-gray-500">Ver y actualizar el estado de los pedidos</p>
                   </div>
                 </div>
               </a>

@@ -23,7 +23,17 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
   onSubmit,
   onCancel
 }) => {
-  const defaultData = {
+  type SupplierFormData = {
+    id?: string;
+    name: string;
+    contactPerson: string;
+    email: string;
+    phone: string;
+    address: string;
+    products: string[];
+  };
+
+  const defaultData: SupplierFormData = {
     name: '',
     contactPerson: '',
     email: '',
@@ -32,7 +42,7 @@ const SupplierForm: React.FC<SupplierFormProps> = ({
     products: [],
   };
 
-  const [formData, setFormData] = useState(initialData || defaultData);
+  const [formData, setFormData] = useState<SupplierFormData>(initialData || defaultData);
   const [productInput, setProductInput] = useState('');
 
   useEffect(() => {

@@ -99,8 +99,11 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
             ))}
             {suppliers.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
-                  No suppliers found.
+                <td colSpan={4} className="px-6 py-12 text-center">
+                  <div className="text-gray-500">
+                    <div className="text-lg font-medium mb-2">No hay proveedores registrados</div>
+                    <div className="text-sm">Comienza agregando tu primer proveedor usando el botón "Agregar Nuevo Proveedor"</div>
+                  </div>
                 </td>
               </tr>
             )}

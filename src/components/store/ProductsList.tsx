@@ -29,19 +29,19 @@ const ProductsList: React.FC<ProductsListProps> = ({
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Product
+                Producto
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Category
+                Categoría
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Price
+                Precio
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Stock
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
+                Acciones
               </th>
             </tr>
           </thead>
@@ -71,11 +71,11 @@ const ProductsList: React.FC<ProductsListProps> = ({
                   <div className="text-sm text-gray-900">{product.category}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">${product.price.toFixed(2)}</div>
+                  <div className="text-sm font-medium text-gray-900">${product.price.toLocaleString('es-CL')}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className={`text-sm ${product.stock > 10 ? 'text-green-600' : product.stock > 0 ? 'text-yellow-600' : 'text-red-600'}`}>
-                    {product.stock} units
+                  <div className={`text-sm font-medium ${product.stock > 10 ? 'text-green-600' : product.stock > 0 ? 'text-yellow-600' : 'text-red-600'}`}>
+                    {product.stock} {product.stock === 1 ? 'unidad' : 'unidades'}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -83,25 +83,28 @@ const ProductsList: React.FC<ProductsListProps> = ({
                     variant="outline"
                     size="sm"
                     onClick={() => onEdit(product.id)}
-                    className="mr-2"
+                    className="mr-2 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300"
                   >
-                    Edit
+                    Editar
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => onDelete(product.id)}
-                    className="text-red-600 hover:text-red-800"
+                    className="text-red-600 hover:text-red-800 hover:bg-red-50 hover:border-red-300"
                   >
-                    Delete
+                    Eliminar
                   </Button>
                 </td>
               </tr>
             ))}
             {products.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                  No products found.
+                <td colSpan={5} className="px-6 py-12 text-center">
+                  <div className="text-gray-500">
+                    <div className="text-lg font-medium mb-2">No hay productos registrados</div>
+                    <div className="text-sm">Comienza agregando tu primer producto usando el botón "Añadir Nuevo Producto"</div>
+                  </div>
                 </td>
               </tr>
             )}

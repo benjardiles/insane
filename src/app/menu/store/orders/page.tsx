@@ -1,142 +1,182 @@
 'use client';
-
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { storeAPI } from '@/services/api/store';
 import StoreLayout from '@/components/layouts/StoreLayout';
 import OrdersList from '@/components/store/OrdersList';
-import OrderDetail from '@/components/store/OrderDetail';
+import OrderDetails from '@/components/store/OrderDetail';
 
-// Mock data for demonstration
-const MOCK_ORDERS = [
-  {
-    id: 'ORD-001',
-    customer: {
-      name: 'Juan Pérez',
-      address: 'Av. Providencia 1234, Santiago, Chile',
-      phone: '+56 9 1234 5678',
-      email: 'juan.perez@example.com',
-    },
-    date: '2023-05-15 14:30',
-    total: 35000,
-    status: 'pending' as const,
-    deliveryMethod: 'delivery' as const,
-    items: [
-      { id: 'P1', name: 'Palta Hass', quantity: 1, price: 12000 },
-      { id: 'P2', name: 'Pan Amasado', quantity: 2, price: 11500 },
-    ],
-    notes: 'Por favor dejar en la portería.',
-  },
-  {
-    id: 'ORD-002',
-    customer: {
-      name: 'María González',
-      address: 'Calle Los Aromos 456, Viña del Mar, Chile',
-      phone: '+56 9 8765 4321',
-      email: 'maria.gonzalez@example.com',
-    },
-    date: '2023-05-15 12:15',
-    total: 42500,
-    status: 'processing' as const,
-    deliveryMethod: 'pickup' as const,
-    items: [
-      { id: 'P3', name: 'Huevos de Campo', quantity: 1, price: 4500 },
-      { id: 'P4', name: 'Leche Orgánica', quantity: 1, price: 6000 },
-      { id: 'P5', name: 'Pasta Sin Gluten', quantity: 2, price: 16000 },
-    ],
-  },
-  {
-    id: 'ORD-003',
-    customer: {
-      name: 'Roberto López',
-      address: 'Av. Las Condes 789, Santiago, Chile',
-      phone: '+56 9 4567 8901',
-    },
-    date: '2023-05-14 16:45',
-    total: 28750,
-    status: 'ready' as const,
-    deliveryMethod: 'delivery' as const,
-    items: [
-      { id: 'P6', name: 'Carne de Vacuno', quantity: 1, price: 18990 },
-      { id: 'P7', name: 'Papas Orgánicas', quantity: 1, price: 9750 },
-    ],
-  },
-  {
-    id: 'ORD-004',
-    customer: {
-      name: 'Sara Fernández',
-      phone: '+56 9 7890 1234',
-    },
-    date: '2023-05-14 10:20',
-    total: 15990,
-    status: 'delivered' as const,
-    deliveryMethod: 'pickup' as const,
-    items: [
-      { id: 'P8', name: 'Torta Vegana de Chocolate', quantity: 1, price: 15990 },
-    ],
-  },
-  {
-    id: 'ORD-005',
-    customer: {
-      name: 'Miguel Rojas',
-      address: 'Calle Principal 321, Valparaíso, Chile',
-      phone: '+56 9 3216 5478',
-    },
-    date: '2023-05-13 15:10',
-    total: 22500,
-    status: 'cancelled' as const,
-    deliveryMethod: 'delivery' as const,
-    items: [
-      { id: 'P9', name: 'Manzanas Orgánicas', quantity: 2, price: 8000 },
-      { id: 'P10', name: 'Miel Artesanal', quantity: 1, price: 14500 },
-    ],
-  },
-];
+interface OrderItem {
+  id: string;
+  name: string;
+  quantity: number;
+  price: number;
+}
+
+interface Order {
+  id: string;
+  customer: {
+    name: string;
+    address?: string;
+    phone: string;
+    email?: string;
+  };
+  date: string;
+  total: number;
+  status: 'pending' | 'processing' | 'ready' | 'delivered' | 'cancelled';
+  deliveryMethod: 'delivery' | 'pickup';
+  items: OrderItem[];
+  notes?: string;
+}
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState(MOCK_ORDERS);
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleViewDetails = (orderId: string) => {
-    const order = orders.find(o => o.id === orderId);
-    if (order) {
-      setSelectedOrder(order);
+  const fetchOrders = async (status = '') => {
+    try {
+      setLoading(true);
+      const response = await storeAPI.getOrders(1, 50, status);
+      const rawOrders = response.data || response || [];
+
+      // Transform API data to match component interface
+      const transformedOrders: Order[] = rawOrders.map((order: any) => ({
+        id: order.id || order._id || Math.random().toString(),
+        customer: {
+          name: order.customerName || order.customer?.name || 'Cliente Desconocido',
+          phone: order.customerPhone || order.customer?.phone || 'N/A',
+          email: order.customerEmail || order.customer?.email,
+          address: order.customerAddress || order.customer?.address
+        },
+        date: order.createdAt || order.date || new Date().toISOString().split('T')[0],
+        total: order.total || 0,
+        status: order.status || 'pending',
+        deliveryMethod: order.deliveryMethod || 'pickup',
+        items: order.items?.map((item: any) => ({
+          id: item.id || item._id || Math.random().toString(),
+          name: item.name || item.productName || 'Producto',
+          quantity: item.quantity || 1,
+          price: item.price || 0
+        })) || [],
+        notes: order.notes
+      }));
+
+      setOrders(transformedOrders);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+      setError('No se pudieron cargar los pedidos');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleUpdateStatus = (orderId: string, newStatus: string) => {
-    // In a real app, you would call an API to update the order status
-    // For now, we'll just update our mock data
-    setOrders(orders.map(order => 
-      order.id === orderId ? { ...order, status: newStatus as any } : order
-    ));
+  useEffect(() => {
+    fetchOrders(statusFilter);
+  }, [statusFilter]);
+
+  const handleViewDetails = async (orderId: string | number) => {
+    try {
+      const rawOrder = await storeAPI.getOrder(String(orderId));
+
+      // Transform API data to match component interface
+      const transformedOrder: Order = {
+        id: rawOrder.id || rawOrder._id || String(orderId),
+        customer: {
+          name: rawOrder.customerName || rawOrder.customer?.name || 'Cliente Desconocido',
+          phone: rawOrder.customerPhone || rawOrder.customer?.phone || 'N/A',
+          email: rawOrder.customerEmail || rawOrder.customer?.email,
+          address: rawOrder.customerAddress || rawOrder.customer?.address
+        },
+        date: rawOrder.createdAt || rawOrder.date || new Date().toISOString().split('T')[0],
+        total: rawOrder.total || 0,
+        status: rawOrder.status || 'pending',
+        deliveryMethod: rawOrder.deliveryMethod || 'pickup',
+        items: rawOrder.items?.map((item: any) => ({
+          id: item.id || item._id || Math.random().toString(),
+          name: item.name || item.productName || 'Producto',
+          quantity: item.quantity || 1,
+          price: item.price || 0
+        })) || [],
+        notes: rawOrder.notes
+      };
+
+      setSelectedOrder(transformedOrder);
+    } catch (err) {
+      console.error(`Error fetching order ${orderId}:`, err);
+      alert('No se pudo cargar el detalle del pedido');
+    }
   };
 
-  const handleUpdateSelectedOrderStatus = (newStatus: string) => {
+  const handleUpdateStatus = async (orderId: string, newStatus: Order['status']) => {
+    try {
+      await storeAPI.updateOrderStatus(orderId, newStatus);
+      // Actualizar la lista de pedidos
+      fetchOrders(statusFilter);
+      // Si hay un pedido seleccionado, actualizar su estado
+      if (selectedOrder && selectedOrder.id === orderId) {
+        setSelectedOrder({...selectedOrder, status: newStatus});
+      }
+    } catch (err) {
+      console.error(`Error updating order ${orderId} status:`, err);
+      alert('No se pudo actualizar el estado del pedido');
+    }
+  };
+
+  // Handler específico para OrderDetails que solo recibe el status
+  const handleUpdateSelectedOrderStatus = async (newStatus: Order['status']) => {
     if (selectedOrder) {
-      handleUpdateStatus(selectedOrder.id, newStatus);
-      setSelectedOrder({ ...selectedOrder, status: newStatus });
+      await handleUpdateStatus(selectedOrder.id, newStatus);
     }
   };
 
-  const handleBackToList = () => {
+  const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setStatusFilter(e.target.value);
+  };
+
+  const handleCloseDetails = () => {
     setSelectedOrder(null);
   };
+
+  if (loading && orders.length === 0) return <StoreLayout><div>Cargando...</div></StoreLayout>;
+  if (error) return <StoreLayout><div>Error: {error}</div></StoreLayout>;
 
   return (
     <StoreLayout>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Orders</h1>
-        <p className="text-gray-600">Manage your store's orders</p>
+        <h1 className="text-3xl font-bold">Pedidos</h1>
+        <p className="text-gray-600">Gestiona los pedidos de tu tienda</p>
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Filtrar por estado:
+        </label>
+        <select
+          value={statusFilter}
+          onChange={handleStatusFilterChange}
+          className="w-full sm:w-64 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="">Todos</option>
+          <option value="pending">Pendientes</option>
+          <option value="processing">En proceso</option>
+          <option value="ready">Listos</option>
+          <option value="delivered">Entregados</option>
+          <option value="cancelled">Cancelados</option>
+        </select>
       </div>
 
       {selectedOrder ? (
-        <OrderDetail
+        <OrderDetails
           order={selectedOrder}
           onUpdateStatus={handleUpdateSelectedOrderStatus}
-          onBack={handleBackToList}
+          onBack={handleCloseDetails}
         />
       ) : (
-        <OrdersList
-          orders={orders}
+        <OrdersList 
+          orders={orders} 
           onViewDetails={handleViewDetails}
           onUpdateStatus={handleUpdateStatus}
         />
