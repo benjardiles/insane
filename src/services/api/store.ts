@@ -62,17 +62,67 @@ export class StoreAPI {
     }
   }
 
-  async updateProduct(id: string, productData: any) {
-    try {
-      const response = await axios.patch(`${this.baseURL}/products/${id}`, productData, {
-        headers: this.getHeaders()
-      });
-      return response.data;
-    } catch (error) {
-      console.error(`Error updating product ${id}:`, error);
-      throw error;
+async updateProduct(id: string, productData: any) {
+  try {
+    if (!id) {
+      throw new Error('ID de producto no proporcionado');
     }
+    
+    // Crear un objeto limpio con solo los campos permitidos
+    const cleanData = {
+      name: productData.name,
+      description: productData.description,
+      price: Number(productData.price),
+      stock: Number(productData.stock),
+      category: productData.category,
+      image: productData.image || '/placeholder-product.jpg',
+      tags: Array.isArray(productData.tags) ? productData.tags : [],
+      isActive: productData.isActive !== undefined ? productData.isActive : true
+    };
+    
+    // Añadir deliveryOptions sin el _id
+    if (productData.deliveryOptions) {
+      cleanData.deliveryOptions = {
+        delivery: Boolean(productData.deliveryOptions.delivery),
+        pickup: Boolean(productData.deliveryOptions.pickup)
+      };
+    }
+    
+    // Añadir nutritionalInfo
+    if (productData.nutritionalInfo) {
+      cleanData.nutritionalInfo = {
+        calories: Number(productData.nutritionalInfo.calories || 0),
+        protein: Number(productData.nutritionalInfo.protein || 0),
+        carbs: Number(productData.nutritionalInfo.carbs || 0),
+        fat: Number(productData.nutritionalInfo.fat || 0)
+      };
+    }
+    
+    // Eliminar explícitamente campos que no deben enviarse
+    delete cleanData.id;
+    delete cleanData._id;
+    
+    console.log(`Datos limpios para actualizar producto ${id}:`, cleanData);
+    
+    const response = await axios.patch(`${this.baseURL}/products/${id}`, cleanData, {
+      headers: this.getHeaders()
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating product ${id}:`, error);
+    
+    if (error.response) {
+      console.error('Respuesta del servidor:', {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data
+      });
+    }
+    
+    throw error;
   }
+}
 
   async deleteProduct(id: string) {
     try {

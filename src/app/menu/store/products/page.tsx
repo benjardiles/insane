@@ -132,42 +132,45 @@ export default function ProductsPage() {
       }
     }
   };
-
-  const handleSubmitProduct = async (formData: {
-    id?: string;
-    name: string;
-    description: string;
-    price: number;
-    stock: number;
-    category: string;
-    tags: string[];
-    deliveryOptions: {
-      delivery: boolean;
-      pickup: boolean;
+const handleSubmitProduct = async (formData :any) => {
+  try {
+    // Asegúrate de que los tipos de datos son correctos
+    const dataToSend = {
+      name: formData.name,
+      description: formData.description,
+      price: Number(formData.price), // Asegúrate de que sea número
+      stock: Number(formData.stock), // Asegúrate de que sea número
+      category: formData.category,
+      tags: Array.isArray(formData.tags) ? formData.tags : [],
+      deliveryOptions: {
+        delivery: Boolean(formData.deliveryOptions?.delivery),
+        pickup: Boolean(formData.deliveryOptions?.pickup)
+      },
+      // Solo incluye nutritionalInfo si tiene valores
+      ...(formData.nutritionalInfo && {
+        nutritionalInfo: {
+          calories: Number(formData.nutritionalInfo.calories),
+          protein: Number(formData.nutritionalInfo.protein),
+          carbs: Number(formData.nutritionalInfo.carbs),
+          fat: Number(formData.nutritionalInfo.fat)
+        }
+      }),
+      isActive: formData.isActive !== undefined ? Boolean(formData.isActive) : true
     };
-    nutritionalInfo?: {
-      calories: number;
-      protein: number;
-      carbs: number;
-      fat: number;
-    };
-  }) => {
-    try {
-      if (editingProduct) {
-        // Actualizar producto existente
-        await storeAPI.updateProduct(editingProduct.id as string, formData);
-      } else {
-        // Crear nuevo producto
-        await storeAPI.createProduct(formData);
-      }
-      // Actualizar la lista de productos
-      fetchProducts();
-      setShowForm(false);
-    } catch (err) {
-      console.error('Error saving product:', err);
-      alert('No se pudo guardar el producto');
+    
+    if (editingProduct) {
+      await storeAPI.updateProduct(editingProduct.id, dataToSend);
+    } else {
+      await storeAPI.createProduct(dataToSend);
     }
-  };
+    
+    fetchProducts();
+    setShowForm(false);
+  } catch (err) {
+    console.error('Error saving product:', err);
+    alert('No se pudo guardar el producto');
+  }
+};
 
   const handleCancelForm = () => {
     setShowForm(false);
