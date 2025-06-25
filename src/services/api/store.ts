@@ -215,6 +215,21 @@ async updateProduct(id: string, productData: any) {
   }
 
 // SUPPLIERS
+
+async getSuppliersByUser(userId: string, page = 1, limit = 10) {
+  try {
+    // Obtener los proveedores de un usuario específico
+    const response = await axios.get(`${this.baseURL}/suppliers/user/${userId}`, {
+      headers: this.getHeaders(),
+      params: { page, limit }
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching suppliers for user ${userId}:`, error);
+    throw error;
+  }
+}
+// este le sirve al admin
 async getSuppliers(page = 1, limit = 10, search = '') {
   try {
     // Obtener todos los proveedores con paginación y búsqueda opcional
@@ -244,8 +259,18 @@ async getSupplier(id: string) {
 
 async createSupplier(supplierData: any) {
   try {
-    // Ensure supplierData has all required fields
-    const response = await axios.post(`${this.baseURL}/suppliers`, supplierData, {
+    // Obtener el ID del usuario del token
+    const userId = await this.decodeJWT();
+    
+    // Asegurar que el proveedor esté asociado al usuario actual
+    const dataToSend = {
+      ...supplierData,
+      user_id: userId
+    };
+    
+    console.log('Creating supplier with data:', dataToSend);
+    
+    const response = await axios.post(`${this.baseURL}/suppliers`, dataToSend, {
       headers: this.getHeaders()
     });
     return response.data;
@@ -257,10 +282,17 @@ async createSupplier(supplierData: any) {
 
 async updateSupplier(id: string, supplierData: any) {
   try {
-    // Remove any fields that shouldn't be sent to the API
-    const { id: supplierId, ...dataToUpdate } = supplierData;
+    // Eliminar campos que no deberían enviarse al API
+    const { id: supplierId, _id, createdAt, updatedAt, __v, ...dataToUpdate } = supplierData;
     
-    // Actualizar un proveedor existente por su ID
+    // Asegurar que no se modifica el user_id
+    if (dataToUpdate.user_id === undefined) {
+      const userId = await this.decodeJWT();
+      dataToUpdate.user_id = userId;
+    }
+    
+    console.log(`Updating supplier ${id} with data:`, dataToUpdate);
+    
     const response = await axios.patch(`${this.baseURL}/suppliers/${id}`, dataToUpdate, {
       headers: this.getHeaders()
     });

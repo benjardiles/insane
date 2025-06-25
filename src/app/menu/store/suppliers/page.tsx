@@ -25,34 +25,44 @@ export default function SuppliersPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSuppliers = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      // El backend filtrará automáticamente por el storeId del usuario logueado
-      const response = await storeAPI.getSuppliers();
-      const rawSuppliers = response.data || response || [];
-
-      // Transform API data to match component interface
-      const transformedSuppliers: Supplier[] = rawSuppliers.map((supplier: any) => ({
-        id: supplier.id || supplier._id || Math.random().toString(),
-        name: supplier.name || 'Proveedor Sin Nombre',
-        contactPerson: supplier.contactPerson || supplier.contact || 'N/A',
-        email: supplier.email || 'N/A',
-        phone: supplier.phone || 'N/A',
-        address: supplier.address || 'N/A',
-        products: supplier.products || []
-      }));
-
-      setSuppliers(transformedSuppliers);
-    } catch (err: any) {
-      console.error('Error fetching suppliers:', err);
-      setError(err.message || 'No se pudieron cargar los proveedores');
-    } finally {
-      setLoading(false);
+const fetchSuppliers = async () => {
+  try {
+    setLoading(true);
+    setError(null);
+    
+    // Obtener el ID del usuario actual
+    const userId = await storeAPI.decodeJWT();
+    
+    // Si tenemos un userId, obtener los proveedores de ese usuario específico
+    let response;
+    if (userId) {
+      response = await storeAPI.getSuppliersByUser(userId);
+    } else {
+      // Fallback: usar el método normal que ahora filtrará por el usuario del token
+      response = await storeAPI.getSuppliers();
     }
-  };
+    
+    const rawSuppliers = response.data || response || [];
 
+    // Transform API data to match component interface
+    const transformedSuppliers: Supplier[] = rawSuppliers.map((supplier: any) => ({
+      id: supplier.id || supplier._id || Math.random().toString(),
+      name: supplier.name || 'Proveedor Sin Nombre',
+      contactPerson: supplier.contactPerson || supplier.contact || 'N/A',
+      email: supplier.email || 'N/A',
+      phone: supplier.phone || 'N/A',
+      address: supplier.address || 'N/A',
+      products: supplier.products || []
+    }));
+
+    setSuppliers(transformedSuppliers);
+  } catch (err: any) {
+    console.error('Error fetching suppliers:', err);
+    setError(err.message || 'No se pudieron cargar los proveedores');
+  } finally {
+    setLoading(false);
+  }
+};
   useEffect(() => {
     // Try to fetch suppliers but don't block the UI if it fails
     fetchSuppliers().catch(() => {
@@ -92,37 +102,44 @@ export default function SuppliersPage() {
     }
   };
 
-  const handleSubmitSupplier = async (formData: SupplierFormData) => {
-    try {
-      // El backend añadirá automáticamente el storeId
-      if (editingSupplier) {
-        // Update existing supplier
-        await storeAPI.updateSupplier(editingSupplier.id, formData);
-        setSuppliers(suppliers.map(s =>
-          s.id === editingSupplier.id ? { ...s, ...formData } : s
-        ));
-      } else {
-        // Add new supplier
-        const newSupplier = await storeAPI.createSupplier(formData);
-        const transformedSupplier: Supplier = {
-          id: newSupplier.id || Math.random().toString(),
-          name: newSupplier.name || formData.name,
-          contactPerson: newSupplier.contactPerson || formData.contactPerson,
-          email: newSupplier.email || formData.email,
-          phone: newSupplier.phone || formData.phone,
-          address: newSupplier.address || formData.address,
-          products: newSupplier.products || formData.products
-        };
-        setSuppliers([...suppliers, transformedSupplier]);
-      }
-      setShowForm(false);
-      setEditingSupplier(null);
-    } catch (err: any) {
-      console.error('Error saving supplier:', err);
-      alert('No se pudo guardar el proveedor');
+const handleSubmitSupplier = async (formData: SupplierFormData) => {
+  try {
+    // Obtener el ID del usuario actual
+    const userId = await storeAPI.decodeJWT();
+    
+    // Añadir el user_id al formData
+    const dataToSend = {
+      ...formData,
+      user_id: userId
+    };
+    
+    if (editingSupplier) {
+      // Update existing supplier
+      await storeAPI.updateSupplier(editingSupplier.id, dataToSend);
+      setSuppliers(suppliers.map(s =>
+        s.id === editingSupplier.id ? { ...s, ...formData } : s
+      ));
+    } else {
+      // Add new supplier
+      const newSupplier = await storeAPI.createSupplier(dataToSend);
+      const transformedSupplier: Supplier = {
+        id: newSupplier.id || newSupplier._id || Math.random().toString(),
+        name: newSupplier.name || formData.name,
+        contactPerson: newSupplier.contactPerson || formData.contactPerson,
+        email: newSupplier.email || formData.email,
+        phone: newSupplier.phone || formData.phone,
+        address: newSupplier.address || formData.address,
+        products: newSupplier.products || formData.products
+      };
+      setSuppliers([...suppliers, transformedSupplier]);
     }
-  };
-
+    setShowForm(false);
+    setEditingSupplier(null);
+  } catch (err: any) {
+    console.error('Error saving supplier:', err);
+    alert('No se pudo guardar el proveedor');
+  }
+};
   const handleCancelForm = () => {
     setShowForm(false);
     setEditingSupplier(null);
