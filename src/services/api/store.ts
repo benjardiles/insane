@@ -1,4 +1,12 @@
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
+
+
+interface DecodedToken {
+  sub: string; // o puede que sea 'sub', 'id', etc., depende de tu backend
+  // otros campos que tenga tu JWT
+}
+
 
 export class StoreAPI {
   private baseURL = 'http://localhost:3002/api/store';
@@ -11,10 +19,26 @@ export class StoreAPI {
     };
   }
 
+  // GET USER INFO
+  async decodeJWT() {
+    const token = localStorage.getItem('token');
+    let userIdFromToken = null;
+
+    if (token) {
+      const decoded = jwtDecode<DecodedToken>(token);
+      userIdFromToken = decoded.sub; // depende de cómo venga en tu token
+      console.log('User ID from token:', userIdFromToken);
+    }
+
+    return userIdFromToken;
+  }
+
   // DASHBOARD
   async getDashboardStats() {
     try {
-      const response = await axios.get(`${this.baseURL}/dashboard`, {
+      const userId = await this.decodeJWT();
+      console.log('Fetching dashboard stats for user:', userId);
+      const response = await axios.get(`${this.baseURL}/dashboard/${userId}`, {
         headers: this.getHeaders()
       });
       return response.data;
@@ -34,6 +58,19 @@ export class StoreAPI {
       return response.data;
     } catch (error) {
       console.error('Error fetching products:', error);
+      throw error;
+    }
+  }
+
+  async getProductsByUser(userId: string, page = 1, limit = 10) {
+    try {
+      const response = await axios.get(`${this.baseURL}/products/user/${userId}`, {
+        headers: this.getHeaders(),
+        params: { page, limit }
+      });
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching products for user ${userId}:`, error);
       throw error;
     }
   }
@@ -278,4 +315,3 @@ async deleteSupplier(id: string) {
 }
 
 export const storeAPI = new StoreAPI();
-

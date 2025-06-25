@@ -4,10 +4,10 @@ import { Card } from '../ui/card';
 interface DashboardSummaryProps {
   stats: {
     totalProducts: number;
-    pendingOrders: number;
-    completedOrders: number;
-    totalRevenue: number;
-    averageRating: number;
+    //pendingOrders: number;
+    //completedOrders: number;
+    //totalRevenue: number;
+    //averageRating: number;
   };
 }
 
@@ -20,22 +20,22 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ stats }) => {
     },
     {
       title: 'Pending Orders',
-      value: stats.pendingOrders,
+      //value: stats.pendingOrders,
       icon: '⏳',
     },
     {
       title: 'Completed Orders',
-      value: stats.completedOrders,
+      //value: stats.completedOrders,
       icon: '✅',
     },
     {
       title: 'Total Revenue',
-      value: `$${stats.totalRevenue.toFixed(2)}`,
+      //value: `$${stats.totalRevenue.toFixed(2)}`,
       icon: '💰',
     },
     {
       title: 'Average Rating',
-      value: `${stats.averageRating.toFixed(1)} ★`,
+      //value: `${stats.averageRating.toFixed(1)} ★`,
       icon: '⭐',
     },
   ];

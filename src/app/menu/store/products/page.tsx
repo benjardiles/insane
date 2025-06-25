@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { storeAPI } from '@/services/api/store';
 import StoreLayout from '@/components/layouts/StoreLayout';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ const PRODUCT_CATEGORIES = [
 
 interface Product {
   id: string;
+  user_id: string; // Opcional, si el producto está asociado a un usuario
   name: string;
   description: string;
   price: number;
@@ -50,16 +51,25 @@ export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
 
+  
+
   const fetchProducts = async () => {
     try {
+      // Obtener el userId del token JWT
+      const userIdFromToken = await storeAPI.decodeJWT();
+      if (!userIdFromToken || typeof userIdFromToken !== 'string') {
+        throw new Error('No se pudo obtener el usuario del token');
+      }
       setLoading(true);
       setError(null);
-      const response = await storeAPI.getProducts();
+      console.log('Fetching products for user:', userIdFromToken);
+      const response = await storeAPI.getProductsByUser(userIdFromToken);
       const rawProducts = response.data || response || [];
 
       // Transform API data to match component interface
       const transformedProducts: Product[] = rawProducts.map((product: any) => ({
         id: product.id || product._id || Math.random().toString(),
+        user_id: product.user_id, // Optional, if the product is associated with a user
         name: product.name || 'Producto Sin Nombre',
         description: product.description || '',
         price: product.price || 0,
@@ -96,6 +106,7 @@ export default function ProductsPage() {
       // Transform API data to match form interface
       const transformedProduct: Product = {
         id: rawProduct.id || rawProduct._id || productId,
+        user_id: rawProduct.user_id, // Optional, if the product is associated with a user
         name: rawProduct.name || '',
         description: rawProduct.description || '',
         price: rawProduct.price || 0,
@@ -132,21 +143,22 @@ export default function ProductsPage() {
       }
     }
   };
-const handleSubmitProduct = async (formData :any) => {
+const handleSubmitProduct = async (formData: any) => {
   try {
-    // Asegúrate de que los tipos de datos son correctos
+    const userIdFromToken = await storeAPI.decodeJWT();
+
     const dataToSend = {
       name: formData.name,
+      user_id: userIdFromToken, // Se obtiene desde el token
       description: formData.description,
-      price: Number(formData.price), // Asegúrate de que sea número
-      stock: Number(formData.stock), // Asegúrate de que sea número
+      price: Number(formData.price),
+      stock: Number(formData.stock),
       category: formData.category,
       tags: Array.isArray(formData.tags) ? formData.tags : [],
       deliveryOptions: {
         delivery: Boolean(formData.deliveryOptions?.delivery),
         pickup: Boolean(formData.deliveryOptions?.pickup)
       },
-      // Solo incluye nutritionalInfo si tiene valores
       ...(formData.nutritionalInfo && {
         nutritionalInfo: {
           calories: Number(formData.nutritionalInfo.calories),
@@ -157,13 +169,13 @@ const handleSubmitProduct = async (formData :any) => {
       }),
       isActive: formData.isActive !== undefined ? Boolean(formData.isActive) : true
     };
-    
+
     if (editingProduct) {
       await storeAPI.updateProduct(editingProduct.id, dataToSend);
     } else {
       await storeAPI.createProduct(dataToSend);
     }
-    
+
     fetchProducts();
     setShowForm(false);
   } catch (err) {
@@ -171,6 +183,7 @@ const handleSubmitProduct = async (formData :any) => {
     alert('No se pudo guardar el producto');
   }
 };
+
 
   const handleCancelForm = () => {
     setShowForm(false);
