@@ -1,10 +1,31 @@
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
+export interface Product {
+  id: string;
+  user_id: string; // Opcional, si el producto está asociado a un usuario
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  category: string;
+  tags: string[];
+  deliveryOptions: {
+    delivery: boolean;
+    pickup: boolean;
+  };
+  nutritionalInfo?: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+  image: string; // Changed from imageUrl to image to match ProductsList component
+}
+
 
 interface DecodedToken {
-  sub: string; // o puede que sea 'sub', 'id', etc., depende de tu backend
-  // otros campos que tenga tu JWT
+  sub: string; 
 }
 
 
@@ -344,6 +365,31 @@ async deleteSupplier(id: string) {
       throw error;
     }
   }
+
+  // PRODUCTS
+async getAllPublicProducts(page = 1, limit = 10, search = '', category = '') {
+  try {
+    const params: any = { 
+      page, 
+      limit, 
+      isActive: true 
+    };
+    
+    // Añadir parámetros opcionales si están presentes
+    if (search) params.search = search;
+    if (category) params.category = category;
+    
+    const response = await axios.get(`${this.baseURL}/products`, {
+      params
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching public products:', error);
+    throw error;
+  }
+}
+
 }
 
 export const storeAPI = new StoreAPI();

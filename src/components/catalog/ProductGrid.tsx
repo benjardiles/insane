@@ -12,21 +12,27 @@ interface Product {
 
 interface ProductGridProps {
   products: Product[];
+  onProductClick: (productId: string, e: React.MouseEvent) => void;
 }
 
-const ProductGrid: React.FC<ProductGridProps> = ({ products }) => {
+const ProductGrid: React.FC<ProductGridProps> = ({ products, onProductClick }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {products.map((product) => (
-        <ProductCard
-          key={product.id}
-          id={product.id}
-          name={product.name}
-          price={product.price}
-          image={product.image}
-          store={product.store}
-          tags={product.tags}
-        />
+        <div 
+          key={product.id} 
+          onClick={(e) => onProductClick(product.id, e)}
+          className="cursor-pointer"
+        >
+          <ProductCard
+            id={product.id}
+            name={product.name}
+            price={product.price}
+            image={product.image}
+            store={product.store}
+            tags={product.tags}
+          />
+        </div>
       ))}
       {products.length === 0 && (
         <div className="col-span-full text-center py-12">

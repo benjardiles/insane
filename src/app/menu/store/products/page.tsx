@@ -1,10 +1,11 @@
 'use client';
 import { useState, useEffect, use } from 'react';
-import { storeAPI } from '@/services/api/store';
+import { Product, storeAPI } from '@/services/api/store';
 import StoreLayout from '@/components/layouts/StoreLayout';
 import { Button } from '@/components/ui/button';
 import ProductsList from '@/components/store/ProductsList';
 import ProductForm from '@/components/store/ProductForm';
+
 
 // Definir las categorías disponibles
 const PRODUCT_CATEGORIES = [
@@ -20,27 +21,6 @@ const PRODUCT_CATEGORIES = [
   'Otros'
 ];
 
-interface Product {
-  id: string;
-  user_id: string; // Opcional, si el producto está asociado a un usuario
-  name: string;
-  description: string;
-  price: number;
-  stock: number;
-  category: string;
-  tags: string[];
-  deliveryOptions: {
-    delivery: boolean;
-    pickup: boolean;
-  };
-  nutritionalInfo?: {
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-  };
-  image: string; // Changed from imageUrl to image to match ProductsList component
-}
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
