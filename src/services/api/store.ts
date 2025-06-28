@@ -395,7 +395,21 @@ async addReview(reviewData: ReviewSubmission) {
     throw error;
   }
 }
-
+// Obtener reseñas por tienda
+async findByStoreId(storeId: string, queryParams: { page?: number; limit?: number } = {}) {
+  try {
+    const { page = 1, limit = 10 } = queryParams;
+    
+    const response = await axios.get(`${this.baseURL}/reviews/store/${storeId}`, {
+      params: { page, limit }
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching reviews for store ${storeId}:`, error);
+    throw error;
+  }
+}
   // PRODUCTS
 async getAllPublicProducts(page = 1, limit = 10, search = '', category = '') {
   try {
