@@ -63,20 +63,20 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ stats }) => {
         </Card>
       ))}
       
-      {/* Tarjeta de calificación mejorada */}
+      {/* Tarjeta de calificación mejorada con mejor responsividad */}
       <Card className="p-4">
-        <div className="flex items-center">
-          <div className="text-3xl mr-4">⭐</div>
+        <div className="flex items-start">
+          <div className="text-3xl mr-4 mt-1">⭐</div>
           <div className="w-full">
-            <h3 className="text-lg font-medium text-gray-500">Average Rating</h3>
-            <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium text-gray-500 mb-2">Average Rating</h3>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold">
                   {stats.averageRating !== undefined ? stats.averageRating.toFixed(1) : '-'}
                 </span>
                 {stats.averageRating !== undefined && renderStars(stats.averageRating)}
               </div>
-              <div className="text-right">
+              <div className="sm:text-right">
                 <p className="text-sm text-gray-500">Based on</p>
                 <p className="font-semibold">{stats.totalReviews || 0} reviews</p>
               </div>
