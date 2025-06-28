@@ -1,11 +1,11 @@
 'use client';
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect } from 'react';
 import { Product, storeAPI } from '@/services/api/store';
 import StoreLayout from '@/components/layouts/StoreLayout';
 import { Button } from '@/components/ui/button';
 import ProductsList from '@/components/store/ProductsList';
 import ProductForm from '@/components/store/ProductForm';
-
+import { useAuth } from '@/contexts/AuthContext';
 
 // Definir las categorías disponibles
 const PRODUCT_CATEGORIES = [
@@ -21,46 +21,50 @@ const PRODUCT_CATEGORIES = [
   'Otros'
 ];
 
+// Función para transformar datos de producto
+const transformProductData = (rawProduct: any, productId?: string): Product => {
+  return {
+    id: rawProduct.id || rawProduct._id || productId || Math.random().toString(),
+    user_id: rawProduct.user_id,
+    name: rawProduct.name || 'Producto Sin Nombre',
+    description: rawProduct.description || '',
+    price: rawProduct.price || 0,
+    stock: rawProduct.stock || 0,
+    category: rawProduct.category || 'Otros',
+    tags: rawProduct.tags || [],
+    deliveryOptions: rawProduct.deliveryOptions || { delivery: true, pickup: true },
+    nutritionalInfo: rawProduct.nutritionalInfo || {
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0
+    },
+    image: rawProduct.image || rawProduct.imageUrl || '/placeholder-product.jpg'
+  };
+};
 
 export default function ProductsPage() {
+  const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [searchTerm, setSearchTerm] = useState('');
-
-  
 
   const fetchProducts = async () => {
     try {
-      // Obtener el userId del token JWT
       const userIdFromToken = await storeAPI.decodeJWT();
       if (!userIdFromToken || typeof userIdFromToken !== 'string') {
         throw new Error('No se pudo obtener el usuario del token');
       }
+      
       setLoading(true);
       setError(null);
-      console.log('Fetching products for user:', userIdFromToken);
+      
       const response = await storeAPI.getProductsByUser(userIdFromToken);
       const rawProducts = response.data || response || [];
-
-      // Transform API data to match component interface
-      const transformedProducts: Product[] = rawProducts.map((product: any) => ({
-        id: product.id || product._id || Math.random().toString(),
-        user_id: product.user_id, // Optional, if the product is associated with a user
-        name: product.name || 'Producto Sin Nombre',
-        description: product.description || '',
-        price: product.price || 0,
-        stock: product.stock || 0,
-        category: product.category || 'Otros',
-        tags: product.tags || [],
-        deliveryOptions: product.deliveryOptions || { delivery: true, pickup: true },
-        nutritionalInfo: product.nutritionalInfo,
-        image: product.image || product.imageUrl || '/placeholder-product.jpg'
-      }));
-
+      const transformedProducts = rawProducts.map((product: any) => transformProductData(product));
+      
       setProducts(transformedProducts);
     } catch (err: any) {
       console.error('Error fetching products:', err);
@@ -82,27 +86,8 @@ export default function ProductsPage() {
   const handleEditProduct = async (productId: string) => {
     try {
       const rawProduct = await storeAPI.getProduct(productId);
-
-      // Transform API data to match form interface
-      const transformedProduct: Product = {
-        id: rawProduct.id || rawProduct._id || productId,
-        user_id: rawProduct.user_id, // Optional, if the product is associated with a user
-        name: rawProduct.name || '',
-        description: rawProduct.description || '',
-        price: rawProduct.price || 0,
-        stock: rawProduct.stock || 0,
-        category: rawProduct.category || 'Otros',
-        tags: rawProduct.tags || [],
-        deliveryOptions: rawProduct.deliveryOptions || { delivery: true, pickup: true },
-        nutritionalInfo: rawProduct.nutritionalInfo || {
-          calories: 0,
-          protein: 0,
-          carbs: 0,
-          fat: 0
-        },
-        image: rawProduct.image || rawProduct.imageUrl || '/placeholder-product.jpg'
-      };
-
+      const transformedProduct = transformProductData(rawProduct, productId);
+      
       setEditingProduct(transformedProduct);
       setShowForm(true);
     } catch (err) {
@@ -115,7 +100,6 @@ export default function ProductsPage() {
     if (confirm('¿Estás seguro de que quieres eliminar este producto?')) {
       try {
         await storeAPI.deleteProduct(productId);
-        // Actualizar la lista de productos
         fetchProducts();
       } catch (err) {
         console.error(`Error deleting product ${productId}:`, err);
@@ -123,47 +107,48 @@ export default function ProductsPage() {
       }
     }
   };
-const handleSubmitProduct = async (formData: any) => {
-  try {
-    const userIdFromToken = await storeAPI.decodeJWT();
 
-    const dataToSend = {
-      name: formData.name,
-      user_id: userIdFromToken, // Se obtiene desde el token
-      description: formData.description,
-      price: Number(formData.price),
-      stock: Number(formData.stock),
-      category: formData.category,
-      tags: Array.isArray(formData.tags) ? formData.tags : [],
-      deliveryOptions: {
-        delivery: Boolean(formData.deliveryOptions?.delivery),
-        pickup: Boolean(formData.deliveryOptions?.pickup)
-      },
-      ...(formData.nutritionalInfo && {
-        nutritionalInfo: {
-          calories: Number(formData.nutritionalInfo.calories),
-          protein: Number(formData.nutritionalInfo.protein),
-          carbs: Number(formData.nutritionalInfo.carbs),
-          fat: Number(formData.nutritionalInfo.fat)
-        }
-      }),
-      isActive: formData.isActive !== undefined ? Boolean(formData.isActive) : true
-    };
+  const handleSubmitProduct = async (formData: any) => {
+    try {
+      const userIdFromToken = await storeAPI.decodeJWT();
 
-    if (editingProduct) {
-      await storeAPI.updateProduct(editingProduct.id, dataToSend);
-    } else {
-      await storeAPI.createProduct(dataToSend);
+      const dataToSend = {
+        name: formData.name,
+        user_id: userIdFromToken,
+        store_name: user?.store_name || 'Tienda sin nombre',
+        description: formData.description,
+        price: Number(formData.price),
+        stock: Number(formData.stock),
+        category: formData.category,
+        tags: Array.isArray(formData.tags) ? formData.tags : [],
+        deliveryOptions: {
+          delivery: Boolean(formData.deliveryOptions?.delivery),
+          pickup: Boolean(formData.deliveryOptions?.pickup)
+        },
+        ...(formData.nutritionalInfo && {
+          nutritionalInfo: {
+            calories: Number(formData.nutritionalInfo.calories),
+            protein: Number(formData.nutritionalInfo.protein),
+            carbs: Number(formData.nutritionalInfo.carbs),
+            fat: Number(formData.nutritionalInfo.fat)
+          }
+        }),
+        isActive: formData.isActive !== undefined ? Boolean(formData.isActive) : true
+      };
+
+      if (editingProduct) {
+        await storeAPI.updateProduct(editingProduct.id, dataToSend);
+      } else {
+        await storeAPI.createProduct(dataToSend);
+      }
+
+      fetchProducts();
+      setShowForm(false);
+    } catch (err) {
+      console.error('Error saving product:', err);
+      alert('No se pudo guardar el producto');
     }
-
-    fetchProducts();
-    setShowForm(false);
-  } catch (err) {
-    console.error('Error saving product:', err);
-    alert('No se pudo guardar el producto');
-  }
-};
-
+  };
 
   const handleCancelForm = () => {
     setShowForm(false);
