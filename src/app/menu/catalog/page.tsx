@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import ClientLayout from '@/components/layouts/ClientLayout';
 import FilterSidebar from '@/components/catalog/FilterSidebar';
 import ProductGrid from '@/components/catalog/ProductGrid';
+import ReviewSection from '@/components/catalog/ReviewSection';
 import { storeAPI } from '@/services/api/store';
 
 // Tipos
@@ -89,13 +90,15 @@ export default function CatalogPage() {
   const [selectedProduct, setSelectedProduct] = useState<CatalogProduct | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [loadingProductDetails, setLoadingProductDetails] = useState<boolean>(false);
+  const [productReviews, setProductReviews] = useState<any[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState<boolean>(false);
 
-  // Efectos
+
   useEffect(() => {
     fetchProducts();
   }, [searchQuery, filters.dietary, page]);
 
-  // Funciones de datos
+
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -136,6 +139,19 @@ export default function CatalogPage() {
     }
   };
 
+  const fetchProductReviews = async (productId: string) => {
+    try {
+      setLoadingReviews(true);
+      const reviews = await storeAPI.getReviews(1, 10, productId);
+      setProductReviews(reviews.data || []);
+    } catch (err: any) {
+      console.error('Error fetching reviews:', err);
+      setProductReviews([]); // En caso de error, mostrar lista vacía
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
   // Funciones auxiliares
   const buildSearchParams = () => {
     return {
@@ -167,10 +183,10 @@ export default function CatalogPage() {
     setError(err.message || defaultMessage);
   };
 
-  // Manejadores de eventos
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setPage(1); // Reset to first page on new search
+    setPage(1); 
   };
 
   const handleProductClick = async (productId: string, e: React.MouseEvent) => {
@@ -181,6 +197,8 @@ export default function CatalogPage() {
     if (productDetails) {
       setSelectedProduct(productDetails);
       setIsModalOpen(true);
+      // Cargar reseñas cuando se abre el modal
+      fetchProductReviews(productId);
     }
   };
 
@@ -191,6 +209,27 @@ export default function CatalogPage() {
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
+  };
+
+  const handleAddReview = async (rating: number, comment: string, customerName: string) => {
+    if (!selectedProduct) return;
+    
+    try {
+      await storeAPI.addReview({
+        customerName,
+        productId: selectedProduct.id,
+        productName: selectedProduct.name,
+        store_name: selectedProduct.store_name || 'Local Store',
+        store_id: selectedProduct.user_id,
+        rating,
+        comment
+      });
+      
+      // Recargar las reseñas después de añadir una nueva
+      fetchProductReviews(selectedProduct.id);
+    } catch (err: any) {
+      handleError(err, 'Failed to add review');
+    }
   };
 
   // Renderizado
@@ -250,6 +289,9 @@ export default function CatalogPage() {
             </Button>
           </div>
         </div>
+        
+        {/* Sección de reseñas */}
+        {renderReviews()}
       </>
     );
   };
@@ -325,6 +367,25 @@ export default function CatalogPage() {
     );
   };
 
+  const renderReviews = () => {
+    if (!selectedProduct) return null;
+    
+    return (
+      <div className="mt-6 pt-6 border-t">
+        <ReviewSection
+          storeId={selectedProduct.user_id}
+          reviews={productReviews}
+          onAddReview={handleAddReview}
+        />
+        {loadingReviews && (
+          <div className="text-center py-4">
+            <p className="text-gray-500">Loading reviews...</p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderPagination = () => {
     if (totalPages <= 1) return null;
     
@@ -353,7 +414,7 @@ export default function CatalogPage() {
     );
   };
 
-  // Componente principal
+
   const filteredProducts = filterProductsByClientSide(products);
 
   return (

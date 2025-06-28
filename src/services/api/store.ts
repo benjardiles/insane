@@ -24,6 +24,15 @@ export interface Product {
 }
 
 
+interface ReviewSubmission {
+  customerName: string;
+  productId: string;
+  productName: string;
+  store_name: string;
+  store_id: string;
+  rating: number;
+  comment: string;
+}
 interface DecodedToken {
   sub: string; 
 }
@@ -337,34 +346,55 @@ async deleteSupplier(id: string) {
   }
 }
 
-  // REVIEWS
-  async getReviews(page = 1, limit = 10, productId = '') {
-    try {
-      const params: any = { page, limit };
-      if (productId) params.productId = productId;
-      
-      const response = await axios.get(`${this.baseURL}/reviews`, {
-        headers: this.getHeaders(),
-        params
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching reviews:', error);
-      throw error;
-    }
+// REVIEWS
+// Obtener reseñas de un producto
+async getReviews(page = 1, limit = 10, productId?: string) {
+  try {
+    const params: any = { page, limit };
+    if (productId) params.productId = productId;
+    
+    const response = await axios.get(`${this.baseURL}/reviews`, {
+      params
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    throw error;
   }
+}
 
-  async replyToReview(id: string, reply: string) {
-    try {
-      const response = await axios.patch(`${this.baseURL}/reviews/${id}/reply`, { reply }, {
-        headers: this.getHeaders()
-      });
-      return response.data;
-    } catch (error) {
-      console.error(`Error replying to review ${id}:`, error);
-      throw error;
-    }
+// Obtener reseñas por producto específico
+async getProductReviews(productId: string) {
+  try {
+    const response = await axios.get(`${this.baseURL}/reviews/product/${productId}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching reviews for product ${productId}:`, error);
+    return { data: [] }; // Retornar un array vacío en caso de error
   }
+}
+
+// Obtener calificación promedio de un producto
+async getProductRating(productId: string) {
+  try {
+    const response = await axios.get(`${this.baseURL}/reviews/product/${productId}/rating`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching rating for product ${productId}:`, error);
+    return 0; // Valor predeterminado si hay error
+  }
+}
+
+// Añadir una nueva reseña
+async addReview(reviewData: ReviewSubmission) {
+  try {
+    const response = await axios.post(`${this.baseURL}/reviews`, reviewData);
+    return response.data;
+  } catch (error) {
+    console.error('Error adding review:', error);
+    throw error;
+  }
+}
 
   // PRODUCTS
 async getAllPublicProducts(page = 1, limit = 10, search = '', category = '') {
