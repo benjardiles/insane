@@ -4,11 +4,26 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Menu, ChevronDown, LogOut, User } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
+import { useCartStore } from '@/store/cartStore';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const { user, isAuthenticated, logout } = useAuth()
+  const { getTotalItems } = useCartStore();
+  const [cartItemsCount, setCartItemsCount] = useState(0);
+
+  useEffect(() => {
+    // Necesitamos este enfoque para manejar la hidratación en el cliente
+    setCartItemsCount(getTotalItems());
+    
+    // Actualizar cada segundo para asegurar que el contador esté actualizado
+    const interval = setInterval(() => {
+      setCartItemsCount(getTotalItems());
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [getTotalItems]);
 
   return (
     <nav className="bg-[#F7F3E9] shadow-md">

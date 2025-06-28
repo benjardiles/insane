@@ -1,5 +1,6 @@
 "use client";
 import axios from 'axios';
+import { useCartStore } from '@/store/cartStore';
 
 export const apiClient = axios.create({
   baseURL: 'http://localhost:3000/api', // Nota: cambiado de https a http para desarrollo local
@@ -82,6 +83,13 @@ export const logout = async (refreshToken: string): Promise<boolean> => {
 
     // Eliminar el token de las cabeceras predeterminadas
     delete apiClient.defaults.headers.common['Authorization'];
+
+    // Limpiar el carrito al cerrar sesión
+    if (typeof window !== 'undefined') {
+      // Acceder al store directamente para limpiar el carrito
+      const clearCart = useCartStore.getState().clearCart;
+      clearCart();
+    }
 
     return true;
   } catch (error) {

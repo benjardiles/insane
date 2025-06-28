@@ -8,6 +8,7 @@ import FilterSidebar from '@/components/catalog/FilterSidebar';
 import ProductGrid from '@/components/catalog/ProductGrid';
 import ReviewSection from '@/components/catalog/ReviewSection';
 import { storeAPI } from '@/services/api/store';
+import PurchaseOptions from '@/components/catalog/PurchaseOptions';
 
 // Tipos
 interface NutritionalInfo {
@@ -284,9 +285,20 @@ export default function CatalogPage() {
             {renderNutritionalInfo()}
             {renderStockInfo()}
             
-            <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white">
-              Añadir al carrito
-            </Button>
+            {selectedProduct && (
+              <PurchaseOptions
+                availableOptions={{
+                  delivery: selectedProduct.deliveryOptions?.delivery || false,
+                  pickup: selectedProduct.deliveryOptions?.pickup || false
+                }}
+                productId={selectedProduct.id}
+                productName={selectedProduct.name}
+                productPrice={selectedProduct.price || 0}
+                productImage={selectedProduct.image || '/placeholder-product.jpg'}
+                storeId={selectedProduct.user_id}
+                storeName={selectedProduct.store_name || 'Local Store'}
+              />
+            )}
           </div>
         </div>
         

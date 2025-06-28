@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { getProfile, logout } from "@/services/api/auth";
+import { useCartStore } from "@/store/cartStore";
 
 interface User {
   id?: string;
@@ -44,6 +45,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+  const clearCart = useCartStore(state => state.clearCart);
 
   // Normaliza los tipos de cuenta para comparaciones consistentes
   const normalizeAccountType = (type: string): string => {
@@ -85,6 +87,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (token) {
       await logout(token);
       setUser(null);
+      
+      // Limpiar el carrito al cerrar sesión
+      clearCart();
+      
       router.push("/login");
     }
   };
@@ -133,3 +139,4 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
