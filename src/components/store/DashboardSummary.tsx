@@ -26,10 +26,13 @@ const DashboardSummary: React.FC<DashboardSummaryProps> = ({ stats }) => {
     );
   };
 
+  // Asegurarse de que los valores se muestren correctamente
+  console.log('Dashboard Summary Stats:', stats);
+  
   const summaryItems = [
     {
       title: 'Total Products',
-      value: stats.totalProducts,
+      value: stats.totalProducts !== undefined ? stats.totalProducts : '-',
       icon: '📦',
     },
     {

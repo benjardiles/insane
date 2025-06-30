@@ -1,9 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { storeAPI } from '@/services/api/store';
 import StoreLayout from '@/components/layouts/StoreLayout';
 import OrdersList from '@/components/store/OrdersList';
 import OrderDetails from '@/components/store/OrderDetail';
+import { storeAPI } from '@/services/api/store';
+import { ordersAPI } from '@/services/api/orders';
 
 interface OrderItem {
   id: string;
@@ -34,14 +35,31 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [storeId, setStoreId] = useState<string | null>(null);
+
+  // Obtener el ID de la tienda al cargar la página
+  useEffect(() => {
+    const getStoreId = async () => {
+      try {
+        const id = await storeAPI.decodeJWT();
+        setStoreId(id);
+      } catch (err) {
+        console.error('Error obteniendo ID de tienda:', err);
+        setError('No se pudo identificar la tienda');
+      }
+    };
+    
+    getStoreId();
+  }, []);
 
   const fetchOrders = async (status = '') => {
+    if (!storeId) return;
+    
     try {
       setLoading(true);
-      const response = await storeAPI.getOrders(1, 50, status);
-      const rawOrders = response.data || response || [];
+      const response = await ordersAPI.getOrdersByStoreId(storeId, 1, 50, status);
+      const rawOrders = response.data || [];
 
-      // Transform API data to match component interface
       const transformedOrders: Order[] = rawOrders.map((order: any) => ({
         id: order.id || order._id || Math.random().toString(),
         customer: {
@@ -74,14 +92,15 @@ export default function OrdersPage() {
   };
 
   useEffect(() => {
-    fetchOrders(statusFilter);
-  }, [statusFilter]);
+    if (storeId) {
+      fetchOrders(statusFilter);
+    }
+  }, [statusFilter, storeId]);
 
   const handleViewDetails = async (orderId: string | number) => {
     try {
       const rawOrder = await storeAPI.getOrder(String(orderId));
 
-      // Transform API data to match component interface
       const transformedOrder: Order = {
         id: rawOrder.id || rawOrder._id || String(orderId),
         customer: {

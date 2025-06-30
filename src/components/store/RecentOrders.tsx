@@ -8,6 +8,7 @@ interface Order {
   total: number;
   status: 'pending' | 'processing' | 'delivered' | 'cancelled';
   items: {
+    id?: string; // Añadimos id opcional para los items
     name: string;
     quantity: number;
   }[];
@@ -56,7 +57,8 @@ const RecentOrders: React.FC<RecentOrdersProps> = ({ orders }) => {
               </div>
               <div className="text-sm text-gray-600 mb-2">
                 {order.items.map((item, index) => (
-                  <span key={index}>
+                  // Usar item.id si existe, o crear una clave única con el índice y el nombre del item
+                  <span key={item.id || `${order.id}-item-${index}`}>
                     {item.quantity}x {item.name}
                     {index < order.items.length - 1 ? ', ' : ''}
                   </span>
@@ -81,3 +83,4 @@ const RecentOrders: React.FC<RecentOrdersProps> = ({ orders }) => {
 };
 
 export default RecentOrders;
+

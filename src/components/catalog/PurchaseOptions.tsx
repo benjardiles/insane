@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useRouter } from 'next/navigation';
 import { useCartStore, CartItem } from '@/store/cartStore';
 import { useNotification } from '@/components/ui/notification';
-import { Loader2 } from 'lucide-react'; // Importar ícono de carga
+import { Loader2 } from 'lucide-react';
 
 interface PurchaseOptionsProps {
   availableOptions: {
@@ -32,13 +32,12 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
   onPurchase
 }) => {
   const [quantity, setQuantity] = useState(1);
-  const [method, setMethod] = useState<'delivery' | 'pickup'>(
-    availableOptions.delivery ? 'delivery' : 'pickup'
-  );
+  const [method, setMethod] = useState<'delivery' | 'pickup'>('delivery');
+  
   const router = useRouter();
   
   // Usar el store de Zustand
-  const { addItem, storeId: cartStoreId, items } = useCartStore();
+  const { addItem, storeId: cartStoreId, items, clearCart } = useCartStore();
   
   // Usar nuestro hook de notificación
   const { showNotification, NotificationComponent } = useNotification();
@@ -73,6 +72,9 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
         setIsLoading(false); // Terminar estado de carga si cancela
         return; // Usuario canceló, no hacer nada
       }
+      
+      // Si el usuario confirma, limpiar el carrito antes de añadir el nuevo producto
+      clearCart();
     }
     
     // Crear el item para el carrito
@@ -117,9 +119,12 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-1">Cantidad</label>
-          <Select value={quantity.toString()} onValueChange={handleQuantityChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Seleccionar cantidad" />
+          <Select
+            value={quantity.toString()}
+            onValueChange={handleQuantityChange}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecciona cantidad" />
             </SelectTrigger>
             <SelectContent>
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
@@ -133,13 +138,13 @@ const PurchaseOptions: React.FC<PurchaseOptionsProps> = ({
         
         <div>
           <label className="block text-sm font-medium mb-1">Método de Entrega</label>
-          <Select 
-            value={method} 
+          <Select
+            value={method}
             onValueChange={handleMethodChange}
             disabled={!availableOptions.delivery && !availableOptions.pickup}
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Seleccionar método" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecciona método" />
             </SelectTrigger>
             <SelectContent>
               {availableOptions.delivery && (
