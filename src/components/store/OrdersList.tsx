@@ -8,17 +8,21 @@ interface Order {
     name: string;
     address?: string;
     phone: string;
+    email?: string;
   };
   date: string;
   total: number;
-  status: 'pending' | 'processing' | 'ready' | 'delivered' | 'cancelled';
+  status: 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY_FOR_PICKUP' | 'PICKED_UP' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
   deliveryMethod: 'delivery' | 'pickup';
-  items: {
-    id: string;
-    name: string;
-    quantity: number;
-    price: number;
-  }[];
+  items: OrderItem[];
+  notes?: string;
+}
+
+interface OrderItem {
+  id: string;
+  name: string;
+  quantity: number;
+  price: number;
 }
 
 interface OrdersListProps {
@@ -34,15 +38,21 @@ const OrdersList: React.FC<OrdersListProps> = ({
 }) => {
   const getStatusColor = (status: Order['status']) => {
     switch (status) {
-      case 'pending':
+      case 'PENDING':
         return 'bg-yellow-100 text-yellow-800';
-      case 'processing':
+      case 'CONFIRMED':
         return 'bg-blue-100 text-blue-800';
-      case 'ready':
+      case 'PREPARING':
+        return 'bg-indigo-100 text-indigo-800';
+      case 'READY_FOR_PICKUP':
         return 'bg-purple-100 text-purple-800';
-      case 'delivered':
+      case 'PICKED_UP':
+        return 'bg-teal-100 text-teal-800';
+      case 'IN_TRANSIT':
+        return 'bg-orange-100 text-orange-800';
+      case 'DELIVERED':
         return 'bg-green-100 text-green-800';
-      case 'cancelled':
+      case 'CANCELLED':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -51,14 +61,39 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
   const getNextStatus = (status: Order['status']): Order['status'] | null => {
     switch (status) {
-      case 'pending':
-        return 'processing';
-      case 'processing':
-        return 'ready';
-      case 'ready':
-        return 'delivered';
+      case 'PENDING':
+        return 'CONFIRMED';
+      case 'CONFIRMED':
+        return 'PREPARING';
+      case 'PREPARING':
+        return 'READY_FOR_PICKUP';
+      // La tienda no puede cambiar a estados posteriores a READY_FOR_PICKUP
+      // ya que esos son manejados por el repartidor
       default:
         return null;
+    }
+  };
+
+  const getStatusText = (status: Order['status']) => {
+    switch (status) {
+      case 'PENDING':
+        return 'Pendiente';
+      case 'CONFIRMED':
+        return 'Confirmado';
+      case 'PREPARING':
+        return 'En preparación';
+      case 'READY_FOR_PICKUP':
+        return 'Listo para entrega';
+      case 'PICKED_UP':
+        return 'Recogido';
+      case 'IN_TRANSIT':
+        return 'En tránsito';
+      case 'DELIVERED':
+        return 'Entregado';
+      case 'CANCELLED':
+        return 'Cancelado';
+      default:
+        return status;
     }
   };
 
@@ -117,7 +152,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
-                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                    {getStatusText(order.status)}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -142,20 +177,20 @@ const OrdersList: React.FC<OrdersListProps> = ({
                       onClick={() => onUpdateStatus(order.id, getNextStatus(order.status)!)}
                       className="bg-blue-50 text-blue-600 hover:bg-blue-100"
                     >
-                      {getNextStatus(order.status) === 'processing' && 'Process'}
-                      {getNextStatus(order.status) === 'ready' && 'Mark Ready'}
-                      {getNextStatus(order.status) === 'delivered' && 'Complete'}
+                      {getNextStatus(order.status) === 'CONFIRMED' && 'Confirmar'}
+                      {getNextStatus(order.status) === 'PREPARING' && 'Iniciar preparación'}
+                      {getNextStatus(order.status) === 'READY_FOR_PICKUP' && 'Marcar como listo'}
                     </Button>
                   )}
                   
-                  {order.status === 'pending' && (
+                  {(order.status === 'PENDING' || order.status === 'CONFIRMED') && (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => onUpdateStatus(order.id, 'cancelled')}
+                      onClick={() => onUpdateStatus(order.id, 'CANCELLED')}
                       className="ml-2 text-red-600 hover:text-red-800"
                     >
-                      Cancel
+                      Cancelar
                     </Button>
                   )}
                 </td>
@@ -176,3 +211,4 @@ const OrdersList: React.FC<OrdersListProps> = ({
 };
 
 export default OrdersList;
+

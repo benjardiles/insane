@@ -5,6 +5,7 @@ import OrdersList from '@/components/store/OrdersList';
 import OrderDetails from '@/components/store/OrderDetail';
 import { storeAPI } from '@/services/api/store';
 import { ordersAPI } from '@/services/api/orders';
+import { Loader2 } from 'lucide-react';
 
 interface OrderItem {
   id: string;
@@ -23,7 +24,7 @@ interface Order {
   };
   date: string;
   total: number;
-  status: 'pending' | 'processing' | 'ready' | 'delivered' | 'cancelled';
+  status: 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY_FOR_PICKUP' | 'PICKED_UP' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
   deliveryMethod: 'delivery' | 'pickup';
   items: OrderItem[];
   notes?: string;
@@ -70,7 +71,7 @@ export default function OrdersPage() {
         },
         date: order.createdAt || order.date || new Date().toISOString().split('T')[0],
         total: order.total || 0,
-        status: order.status || 'pending',
+        status: order.status || 'PENDING',
         deliveryMethod: order.deliveryMethod || 'pickup',
         items: order.items?.map((item: any) => ({
           id: item.id || item._id || Math.random().toString(),
@@ -111,7 +112,7 @@ export default function OrdersPage() {
         },
         date: rawOrder.createdAt || rawOrder.date || new Date().toISOString().split('T')[0],
         total: rawOrder.total || 0,
-        status: rawOrder.status || 'pending',
+        status: rawOrder.status || 'PENDING',
         deliveryMethod: rawOrder.deliveryMethod || 'pickup',
         items: rawOrder.items?.map((item: any) => ({
           id: item.id || item._id || Math.random().toString(),
@@ -131,8 +132,8 @@ export default function OrdersPage() {
 
   const handleUpdateStatus = async (orderId: string, newStatus: Order['status']) => {
     try {
-      await storeAPI.updateOrderStatus(orderId, newStatus);
-      // Actualizar la lista de pedidos
+      console.log("no entra")
+      const r=await storeAPI.updateOrderStatus(orderId, newStatus);
       fetchOrders(statusFilter);
       // Si hay un pedido seleccionado, actualizar su estado
       if (selectedOrder && selectedOrder.id === orderId) {
@@ -159,8 +160,18 @@ export default function OrdersPage() {
     setSelectedOrder(null);
   };
 
-  if (loading && orders.length === 0) return <StoreLayout><div>Cargando...</div></StoreLayout>;
-  if (error) return <StoreLayout><div>Error: {error}</div></StoreLayout>;
+  if (loading && orders.length === 0) {
+    return (
+      <StoreLayout>
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <span className="ml-2">Cargando pedidos...</span>
+        </div>
+      </StoreLayout>
+    );
+  }
+  
+  if (error) return <StoreLayout><div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">{error}</div></StoreLayout>;
 
   return (
     <StoreLayout>
@@ -179,11 +190,14 @@ export default function OrdersPage() {
           className="w-full sm:w-64 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
           <option value="">Todos</option>
-          <option value="pending">Pendientes</option>
-          <option value="processing">En proceso</option>
-          <option value="ready">Listos</option>
-          <option value="delivered">Entregados</option>
-          <option value="cancelled">Cancelados</option>
+          <option value="PENDING">Pendientes</option>
+          <option value="CONFIRMED">Confirmados</option>
+          <option value="PREPARING">En preparación</option>
+          <option value="READY_FOR_PICKUP">Listos para entrega</option>
+          <option value="PICKED_UP">Recogidos</option>
+          <option value="IN_TRANSIT">En tránsito</option>
+          <option value="DELIVERED">Entregados</option>
+          <option value="CANCELLED">Cancelados</option>
         </select>
       </div>
 

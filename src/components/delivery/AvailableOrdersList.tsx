@@ -1,89 +1,80 @@
 import React from 'react';
-import { Card } from '../ui/card';
-import { Button } from '../ui/button';
-
-interface AvailableOrder {
-  id: string;
-  store: {
-    name: string;
-    address: string;
-  };
-  customer: {
-    address: string;
-    distance: number; // in km
-  };
-  items: number; // number of items
-  total: number;
-  estimatedTime: number; // in minutes
-}
+import { AvailableOrder } from '@/services/api/delivery';
 
 interface AvailableOrdersListProps {
   orders: AvailableOrder[];
   onAcceptOrder: (orderId: string) => void;
 }
 
-const AvailableOrdersList: React.FC<AvailableOrdersListProps> = ({
-  orders,
-  onAcceptOrder
+const AvailableOrdersList: React.FC<AvailableOrdersListProps> = ({ 
+  orders, 
+  onAcceptOrder 
 }) => {
+  // Función para mostrar el ID de la orden
+  const getOrderId = (id: string): string => {
+    if (!id) return 'N/A';
+    return id; // Mostrar el ID completo
+  };
+
   return (
     <div className="space-y-4">
-      {orders.length > 0 ? (
-        orders.map((order) => (
-          <Card key={order.id} className="p-4">
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center">
-              <div className="mb-4 md:mb-0">
-                <div className="flex items-center mb-2">
-                  <div className="text-xl mr-2">🏪</div>
-                  <h3 className="font-semibold">{order.store.name}</h3>
-                </div>
-                <p className="text-sm text-gray-600 mb-1">
-                  <span className="font-medium">Pickup:</span> {order.store.address}
-                </p>
-                <p className="text-sm text-gray-600 mb-1">
-                  <span className="font-medium">Delivery:</span> {order.customer.address}
-                </p>
-                <div className="flex items-center text-sm text-gray-600">
-                  <span className="font-medium mr-2">Distance:</span> 
-                  <span className="flex items-center">
-                    <span className="text-blue-500 mr-1">📍</span>
-                    {order.customer.distance.toFixed(1)} km
-                  </span>
-                </div>
-              </div>
-              
-              <div className="flex flex-col items-start md:items-end">
-                <div className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-medium mb-2">
-                  {order.items} {order.items === 1 ? 'item' : 'items'}
-                </div>
-                <p className="text-lg font-bold mb-2">${order.total.toFixed(2)}</p>
-                <div className="flex items-center text-sm text-gray-600 mb-3">
-                  <span className="text-gray-500 mr-1">⏱️</span>
-                  Est. {order.estimatedTime} min
-                </div>
-                <Button 
-                  onClick={() => onAcceptOrder(order.id)}
-                  className="w-full md:w-auto"
-                >
-                  Accept Order
-                </Button>
-              </div>
+      {orders.map((order, index) => (
+        <div 
+          key={order.id || `order-${index}`} 
+          className="bg-white rounded-lg shadow-md p-4 border border-gray-200"
+        >
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="font-semibold text-lg">
+                Pedido #{getOrderId(order.id)}
+              </h3>
+              <p className="text-gray-600 text-sm">
+                {new Date(order.createdAt).toLocaleDateString()}
+              </p>
             </div>
-          </Card>
-        ))
-      ) : (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <div className="text-4xl mb-4">🔍</div>
-          <h3 className="text-xl font-medium mb-2">No Available Orders</h3>
-          <p className="text-gray-500">
-            There are no orders available for delivery at the moment.
-            <br />
-            Check back soon!
-          </p>
+            <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+              {order.status}
+            </span>
+          </div>
+          
+          <div className="mb-4">
+            <h4 className="font-medium text-sm text-gray-700 mb-1">Cliente:</h4>
+            <p className="text-gray-800">{order.customer?.name || 'Cliente sin nombre'}</p>
+            {order.customer?.address && (
+              <p className="text-gray-600 text-sm">{order.customer.address}</p>
+            )}
+            <p className="text-gray-600 text-sm">{order.customer?.phone || 'Sin teléfono'}</p>
+          </div>
+          
+          <div className="mb-4">
+            <h4 className="font-medium text-sm text-gray-700 mb-1">Productos:</h4>
+            <ul className="text-sm space-y-1">
+              {(order.items || []).map((item, idx) => (
+                <li key={`${order.id}-item-${idx}`} className="flex justify-between">
+                  <span>{item.quantity}x {item.name}</span>
+                  <span>${(item.price * item.quantity).toFixed(2)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          
+          <div className="flex justify-between items-center mt-4">
+            <div className="text-lg font-bold">
+              Total: ${order.total.toFixed(2)}
+            </div>
+            <button
+              onClick={() => onAcceptOrder(order.id)}
+              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+            >
+              Aceptar Pedido
+            </button>
+          </div>
         </div>
-      )}
+      ))}
     </div>
   );
 };
 
 export default AvailableOrdersList;
+
+

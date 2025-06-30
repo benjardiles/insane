@@ -19,7 +19,7 @@ interface Order {
   };
   date: string;
   total: number;
-  status: 'pending' | 'processing' | 'ready' | 'delivered' | 'cancelled';
+  status: 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY_FOR_PICKUP' | 'PICKED_UP' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
   deliveryMethod: 'delivery' | 'pickup';
   items: OrderItem[];
   notes?: string;
@@ -38,15 +38,21 @@ const OrderDetail: React.FC<OrderDetailProps> = ({
 }) => {
   const getStatusColor = (status: Order['status']) => {
     switch (status) {
-      case 'pending':
+      case 'PENDING':
         return 'bg-yellow-100 text-yellow-800';
-      case 'processing':
+      case 'CONFIRMED':
         return 'bg-blue-100 text-blue-800';
-      case 'ready':
+      case 'PREPARING':
+        return 'bg-indigo-100 text-indigo-800';
+      case 'READY_FOR_PICKUP':
         return 'bg-purple-100 text-purple-800';
-      case 'delivered':
+      case 'PICKED_UP':
+        return 'bg-teal-100 text-teal-800';
+      case 'IN_TRANSIT':
+        return 'bg-orange-100 text-orange-800';
+      case 'DELIVERED':
         return 'bg-green-100 text-green-800';
-      case 'cancelled':
+      case 'CANCELLED':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -55,14 +61,39 @@ const OrderDetail: React.FC<OrderDetailProps> = ({
 
   const getNextStatus = (status: Order['status']): Order['status'] | null => {
     switch (status) {
-      case 'pending':
-        return 'processing';
-      case 'processing':
-        return 'ready';
-      case 'ready':
-        return 'delivered';
+      case 'PENDING':
+        return 'CONFIRMED';
+      case 'CONFIRMED':
+        return 'PREPARING';
+      case 'PREPARING':
+        return 'READY_FOR_PICKUP';
+      // La tienda no puede cambiar a estados posteriores a READY_FOR_PICKUP
+      // ya que esos son manejados por el repartidor
       default:
         return null;
+    }
+  };
+
+  const getStatusText = (status: Order['status']) => {
+    switch (status) {
+      case 'PENDING':
+        return 'Pendiente';
+      case 'CONFIRMED':
+        return 'Confirmado';
+      case 'PREPARING':
+        return 'En preparación';
+      case 'READY_FOR_PICKUP':
+        return 'Listo para entrega';
+      case 'PICKED_UP':
+        return 'Recogido';
+      case 'IN_TRANSIT':
+        return 'En tránsito';
+      case 'DELIVERED':
+        return 'Entregado';
+      case 'CANCELLED':
+        return 'Cancelado';
+      default:
+        return status;
     }
   };
 
@@ -78,26 +109,27 @@ const OrderDetail: React.FC<OrderDetailProps> = ({
         
         <div className="flex items-center space-x-2">
           <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+            {getStatusText(order.status)}
           </span>
           
           {getNextStatus(order.status) && (
-            <Button
+            <Button 
               onClick={() => onUpdateStatus(getNextStatus(order.status)!)}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
-              {getNextStatus(order.status) === 'processing' && 'Process Order'}
-              {getNextStatus(order.status) === 'ready' && 'Mark as Ready'}
-              {getNextStatus(order.status) === 'delivered' && 'Mark as Delivered'}
+              {getNextStatus(order.status) === 'CONFIRMED' && 'Confirmar pedido'}
+              {getNextStatus(order.status) === 'PREPARING' && 'Iniciar preparación'}
+              {getNextStatus(order.status) === 'READY_FOR_PICKUP' && 'Marcar como listo para entrega'}
             </Button>
           )}
           
-          {order.status === 'pending' && (
-            <Button
+          {(order.status === 'PENDING' || order.status === 'CONFIRMED') && (
+            <Button 
+              onClick={() => onUpdateStatus('CANCELLED')}
               variant="outline"
-              onClick={() => onUpdateStatus('cancelled')}
-              className="text-red-600 hover:text-red-800"
+              className="text-red-600 hover:bg-red-50"
             >
-              Cancel Order
+              Cancelar pedido
             </Button>
           )}
         </div>
@@ -213,3 +245,4 @@ const OrderDetail: React.FC<OrderDetailProps> = ({
 };
 
 export default OrderDetail;
+

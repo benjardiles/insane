@@ -3,7 +3,7 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 
 interface DeliveryOrder {
-  id: string;
+  id: string;  // Ahora id es requerido, no opcional
   store: {
     name: string;
     address: string;
@@ -19,7 +19,8 @@ interface DeliveryOrder {
     quantity: number;
   }[];
   status: 'accepted' | 'picked_up' | 'on_way' | 'delivered';
-  acceptedAt: string;
+  acceptedAt?: string;
+  createdAt?: string;
   estimatedDelivery: string;
 }
 
@@ -28,11 +29,43 @@ interface OrderCardProps {
   onUpdateStatus: (orderId: string, newStatus: DeliveryOrder['status']) => void;
 }
 
-const OrderCard: React.FC<OrderCardProps> = ({
-  order,
-  onUpdateStatus
-}) => {
-  const getStatusLabel = (status: DeliveryOrder['status']) => {
+const OrderCard: React.FC<OrderCardProps> = ({ order, onUpdateStatus }) => {
+  // Función para obtener el ID de la orden para mostrar
+  const getOrderId = (id: string): string => {
+    if (!id) return 'N/A';
+    return id; // Mostrar el ID completo
+  };
+
+  // Función para obtener el siguiente estado
+  const getNextStatus = (currentStatus: DeliveryOrder['status']): DeliveryOrder['status'] | null => {
+    switch (currentStatus) {
+      case 'accepted':
+        return 'picked_up';
+      case 'picked_up':
+        return 'on_way';
+      case 'on_way':
+        return 'delivered';
+      default:
+        return null;
+    }
+  };
+
+  // Función para obtener la etiqueta del siguiente estado
+  const getNextStatusLabel = (currentStatus: DeliveryOrder['status']): string => {
+    switch (currentStatus) {
+      case 'accepted':
+        return 'Mark as Picked Up';
+      case 'picked_up':
+        return 'Start Delivery';
+      case 'on_way':
+        return 'Mark as Delivered';
+      default:
+        return '';
+    }
+  };
+
+  // Función para obtener la etiqueta del estado actual
+  const getStatusLabel = (status: DeliveryOrder['status']): string => {
     switch (status) {
       case 'accepted':
         return 'Accepted';
@@ -47,14 +80,15 @@ const OrderCard: React.FC<OrderCardProps> = ({
     }
   };
 
-  const getStatusColor = (status: DeliveryOrder['status']) => {
+  // Función para obtener el color del estado
+  const getStatusColor = (status: DeliveryOrder['status']): string => {
     switch (status) {
       case 'accepted':
         return 'bg-blue-100 text-blue-800';
       case 'picked_up':
-        return 'bg-purple-100 text-purple-800';
-      case 'on_way':
         return 'bg-yellow-100 text-yellow-800';
+      case 'on_way':
+        return 'bg-purple-100 text-purple-800';
       case 'delivered':
         return 'bg-green-100 text-green-800';
       default:
@@ -62,40 +96,13 @@ const OrderCard: React.FC<OrderCardProps> = ({
     }
   };
 
-  const getNextStatus = (status: DeliveryOrder['status']): DeliveryOrder['status'] | null => {
-    switch (status) {
-      case 'accepted':
-        return 'picked_up';
-      case 'picked_up':
-        return 'on_way';
-      case 'on_way':
-        return 'delivered';
-      default:
-        return null;
-    }
-  };
-
-  const getNextStatusLabel = (status: DeliveryOrder['status']) => {
-    const nextStatus = getNextStatus(status);
-    if (!nextStatus) return null;
-    
-    switch (nextStatus) {
-      case 'picked_up':
-        return 'Mark as Picked Up';
-      case 'on_way':
-        return 'Start Delivery';
-      case 'delivered':
-        return 'Complete Delivery';
-      default:
-        return `Mark as ${getStatusLabel(nextStatus)}`;
-    }
-  };
-
   return (
-    <Card className="overflow-hidden">
+    <Card className="mb-4 overflow-hidden">
       <div className="p-4 border-b bg-gray-50">
         <div className="flex justify-between items-center">
-          <h3 className="font-semibold">Order #{order.id}</h3>
+          <h3 className="font-semibold">
+            Order #{getOrderId(order.id)}
+          </h3>
           <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
             {getStatusLabel(order.status)}
           </span>
@@ -103,44 +110,32 @@ const OrderCard: React.FC<OrderCardProps> = ({
       </div>
       
       <div className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <h4 className="text-sm font-medium text-gray-500 mb-1">Pickup</h4>
-            <div className="bg-blue-50 p-3 rounded">
-              <p className="font-medium">{order.store.name}</p>
-              <p className="text-sm">{order.store.address}</p>
-              <p className="text-sm">{order.store.phone}</p>
-            </div>
-          </div>
-          
-          <div>
-            <h4 className="text-sm font-medium text-gray-500 mb-1">Delivery</h4>
-            <div className="bg-green-50 p-3 rounded">
-              <p className="font-medium">{order.customer.name}</p>
-              <p className="text-sm">{order.customer.address}</p>
-              <p className="text-sm">{order.customer.phone}</p>
-            </div>
-          </div>
+        <div className="mb-4">
+          <h4 className="text-sm font-medium text-gray-500 mb-1">Pickup from:</h4>
+          <p className="font-medium">{order.store.name}</p>
+          <p className="text-sm text-gray-600">{order.store.address}</p>
+          <p className="text-sm text-gray-600">{order.store.phone}</p>
         </div>
         
         <div className="mb-4">
-          <h4 className="text-sm font-medium text-gray-500 mb-1">Items</h4>
-          <ul className="bg-gray-50 p-3 rounded">
+          <h4 className="text-sm font-medium text-gray-500 mb-1">Deliver to:</h4>
+          <p className="font-medium">{order.customer.name}</p>
+          <p className="text-sm text-gray-600">{order.customer.address}</p>
+          <p className="text-sm text-gray-600">{order.customer.phone}</p>
+        </div>
+        
+        <div className="mb-4">
+          <h4 className="text-sm font-medium text-gray-500 mb-1">Items:</h4>
+          <ul className="list-disc list-inside text-sm">
             {order.items.map((item, index) => (
-              <li key={index} className="flex justify-between py-1">
-                <span>{item.quantity}x {item.name}</span>
-              </li>
+              <li key={index}>{item.quantity}x {item.name}</li>
             ))}
           </ul>
         </div>
         
-        <div className="flex justify-between items-center text-sm mb-4">
-          <div>
-            <span className="text-gray-500">Accepted at:</span> {order.acceptedAt}
-          </div>
-          <div>
-            <span className="text-gray-500">Est. delivery:</span> {order.estimatedDelivery}
-          </div>
+        <div className="mb-4">
+          <h4 className="text-sm font-medium text-gray-500 mb-1">Estimated delivery:</h4>
+          <p>{new Date(order.estimatedDelivery).toLocaleString()}</p>
         </div>
         
         {getNextStatus(order.status) && (
@@ -157,3 +152,17 @@ const OrderCard: React.FC<OrderCardProps> = ({
 };
 
 export default OrderCard;
+
+
+
+
+
+
+
+
+
+
+
+
+
+

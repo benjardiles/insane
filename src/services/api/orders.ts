@@ -27,13 +27,26 @@ export interface CreateOrderDto {
   fromCart?: boolean;
 }
 
+// Modificar la enumeración de estados para que coincida con los existentes
+export enum OrderStatus {
+  PENDING = 'PENDING',
+  CONFIRMED = 'CONFIRMED',
+  PREPARING = 'PREPARING',
+  READY_FOR_PICKUP = 'READY_FOR_PICKUP',
+  PICKED_UP = 'PICKED_UP',
+  IN_TRANSIT = 'IN_TRANSIT',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED'
+}
+
+// Actualizar la interfaz OrderResponse para usar la enumeración
 export interface OrderResponse {
   id: string;
   userId: string;
   items: OrderItem[];
   customer: CustomerInfo;
   total: number;
-  status: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+  status: OrderStatus;
   deliveryMethod: 'pickup' | 'delivery';
   paymentMethod: string;
   orderDate: string;
@@ -59,6 +72,12 @@ export interface OrderStatsResponse {
   deliveredOrders: number;
   cancelledOrders: number;
   totalRevenue: number;
+}
+
+// Añadir interfaz para actualizar el estado
+export interface UpdateOrderStatusDto {
+  status: OrderStatus;
+  notes?: string;
 }
 
 class OrdersAPI {
@@ -159,55 +178,70 @@ class OrdersAPI {
       throw error;
     }
   }
-// Obtener mis pedidos
-async getMyOrders(): Promise<{ data: any[] }> {
-  try {
-    // Cambiar de /orders/my-orders a /orders
-    const response = await axios.get(`${this.baseURL}/orders`, {
-      headers: this.getHeaders()
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching my orders:', error);
-    throw error;
-  }
-}
-
-// Obtener órdenes por ID de tienda
-async getOrdersByStoreId(storeId: string, page = 1, limit = 10, status?: string): Promise<{ data: any[], pagination: any }> {
-  try {
-    // Construir parámetros de consulta
-    const params: any = { page, limit };
-    if (status) {
-      params.status = status;
+  
+  // Obtener mis pedidos
+  async getMyOrders(): Promise<{ data: any[] }> {
+    try {
+      // Cambiar de /orders/my-orders a /orders
+      const response = await axios.get(`${this.baseURL}/orders`, {
+        headers: this.getHeaders()
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching my orders:', error);
+      throw error;
     }
-    
-    const response = await axios.get(`${this.baseURL}/orders/store/${storeId}`, {
-      headers: this.getHeaders(),
-      params
-    });
-    
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching orders for store ${storeId}:`, error);
-    throw error;
   }
-}
-
-// Obtener estadísticas de órdenes por ID de tienda
-async getStoreOrderStats(storeId: string): Promise<any> {
-  try {
-    const response = await axios.get(`${this.baseURL}/orders/store/${storeId}/stats`, {
-      headers: this.getHeaders()
-    });
-    
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching order stats for store ${storeId}:`, error);
-    throw error;
+  
+  // Obtener órdenes por ID de tienda
+  async getOrdersByStoreId(storeId: string, page = 1, limit = 10, status?: string): Promise<{ data: any[], pagination: any }> {
+    try {
+      // Construir parámetros de consulta
+      const params: any = { page, limit };
+      if (status) {
+        params.status = status;
+      }
+      
+      const response = await axios.get(`${this.baseURL}/orders/store/${storeId}`, {
+        headers: this.getHeaders(),
+        params
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching orders for store ${storeId}:`, error);
+      throw error;
+    }
   }
-}
+  
+  // Obtener estadísticas de órdenes por ID de tienda
+  async getStoreOrderStats(storeId: string): Promise<any> {
+    try {
+      const response = await axios.get(`${this.baseURL}/orders/store/${storeId}/stats`, {
+        headers: this.getHeaders()
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching order stats for store ${storeId}:`, error);
+      throw error;
+    }
+  }
+  
+  async updateOrderStatus(orderId: string, statusData: UpdateOrderStatusDto): Promise<OrderResponse> {
+    try {
+      const response = await axios.patch(`${this.baseURL}/orders/${orderId}/status`, statusData, {
+        headers: this.getHeaders()
+      });
+      console.log('Respuesta del servidor:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating status for order ${orderId}:`, error);
+      throw error;
+    }
+  }
 }
 
 export const ordersAPI = new OrdersAPI();
+
 

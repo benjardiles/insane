@@ -1,116 +1,194 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DeliveryLayout from '@/components/layouts/DeliveryLayout';
 import MyOrdersList from '@/components/delivery/MyOrdersList';
+import { Loader2 } from 'lucide-react';
+import { deliveryAPI } from '@/services/api/delivery';
 
-// Mock data for demonstration
-const MOCK_MY_ORDERS = [
-  {
-    id: 'ORD-004',
-    store: {
-      name: 'Green Market',
-      address: '123 Main St, Anytown, USA',
-      phone: '(555) 123-4567',
-    },
-    customer: {
-      name: 'John Doe',
-      address: '456 Oak Ave, Anytown, USA',
-      phone: '(555) 987-6543',
-    },
-    items: [
-      { name: 'Organic Vegetables', quantity: 1 },
-      { name: 'Fresh Bread', quantity: 2 },
-    ],
-    status: 'accepted' as const,
-    acceptedAt: '2023-05-15 14:45',
-    estimatedDelivery: '2023-05-15 15:15',
-  },
-  {
-    id: 'ORD-005',
-    store: {
-      name: 'Local Bakery',
-      address: '789 Pine St, Anytown, USA',
-      phone: '(555) 456-7890',
-    },
-    customer: {
-      name: 'Jane Smith',
-      address: '321 Elm St, Anytown, USA',
-      phone: '(555) 789-0123',
-    },
-    items: [
-      { name: 'Artisan Bread', quantity: 1 },
-      { name: 'Chocolate Croissants', quantity: 3 },
-    ],
-    status: 'picked_up' as const,
-    acceptedAt: '2023-05-15 13:30',
-    estimatedDelivery: '2023-05-15 14:00',
-  },
-  {
-    id: 'ORD-006',
-    store: {
-      name: 'Butcher Shop',
-      address: '222 Birch Rd, Anytown, USA',
-      phone: '(555) 234-5678',
-    },
-    customer: {
-      name: 'Robert Johnson',
-      address: '888 Walnut Dr, Anytown, USA',
-      phone: '(555) 345-6789',
-    },
-    items: [
-      { name: 'Grass-Fed Beef', quantity: 1 },
-      { name: 'Free-Range Chicken', quantity: 1 },
-    ],
-    status: 'on_way' as const,
-    acceptedAt: '2023-05-15 12:15',
-    estimatedDelivery: '2023-05-15 12:45',
-  },
-  {
-    id: 'ORD-007',
-    store: {
-      name: 'Farm Fresh',
-      address: '555 Maple Ave, Anytown, USA',
-      phone: '(555) 567-8901',
-    },
-    customer: {
-      name: 'Sarah Williams',
-      address: '777 Cedar Rd, Anytown, USA',
-      phone: '(555) 678-9012',
-    },
-    items: [
-      { name: 'Free-Range Eggs', quantity: 1 },
-      { name: 'Organic Milk', quantity: 1 },
-      { name: 'Local Honey', quantity: 1 },
-    ],
-    status: 'delivered' as const,
-    acceptedAt: '2023-05-15 10:30',
-    estimatedDelivery: '2023-05-15 11:00',
-  },
-];
+// Interfaces para los datos
+interface OrderItem {
+  name: string;
+  quantity: number;
+}
+
+interface DeliveryOrder {
+  id: string;
+  _id: string;
+  store: {
+    name: string;
+    address: string;
+    phone: string;
+  };
+  customer: {
+    name: string;
+    address: string;
+    phone: string;
+  };
+  items: OrderItem[];
+  status: 'accepted' | 'picked_up' | 'on_way' | 'delivered';
+  acceptedAt: string;
+  estimatedDelivery: string;
+}
 
 export default function MyOrdersPage() {
-  const [myOrders, setMyOrders] = useState(MOCK_MY_ORDERS);
+  const [myOrders, setMyOrders] = useState<DeliveryOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleUpdateStatus = (orderId: string, newStatus: 'accepted' | 'picked_up' | 'on_way' | 'delivered') => {
-    // In a real app, you would call an API to update the order status
-    // For now, we'll just update our mock data
-    setMyOrders(myOrders.map(order => 
-      order.id === orderId ? { ...order, status: newStatus } : order
-    ));
+  // Función para mapear estados del backend a estados de la UI
+  const mapOrderStatus = (backendStatus: string): 'accepted' | 'picked_up' | 'on_way' | 'delivered' => {
+    switch (backendStatus) {
+      case 'READY_FOR_PICKUP':
+        return 'accepted';
+      case 'PICKED_UP':
+        return 'picked_up';
+      case 'IN_TRANSIT':
+        return 'on_way';
+      case 'DELIVERED':
+        return 'delivered';
+      default:
+        return 'accepted';
+    }
   };
+
+  // Función para obtener las órdenes asignadas al repartidor
+  const fetchMyOrders = async () => {
+    try {
+      setLoading(true);
+      
+      // Usar el método getMyAssignedOrders de deliveryAPI
+      const response = await deliveryAPI.getMyAssignedOrders();
+      
+      console.log('My orders response:', response);
+      
+      // Transformar los datos al formato esperado por el componente
+      const transformedOrders = response.data.map((order: any) => ({
+        id: order.id || order._id,
+        store: {
+          name: order.storeName || order.items[0]?.storeName || 'Tienda',
+          address: order.storeAddress || 'Dirección de la tienda',
+          phone: order.storePhone || 'Teléfono de la tienda',
+        },
+        customer: {
+          name: order.customer?.name || 'Cliente',
+          address: order.customer?.address || 'Dirección del cliente',
+          phone: order.customer?.phone || 'Teléfono del cliente',
+        },
+        items: order.items?.map((item: any) => ({
+          name: item.name,
+          quantity: item.quantity
+        })) || [],
+        status: mapOrderStatus(order.status),
+        acceptedAt: new Date(order.createdAt).toLocaleString(),
+        estimatedDelivery: new Date(new Date(order.createdAt).getTime() + 30*60000).toLocaleString(),
+      }));
+      
+      setMyOrders(transformedOrders);
+      setError(null);
+    } catch (err: any) {
+      console.error('Error fetching my orders:', err);
+      setError('No se pudieron cargar tus órdenes. Por favor, inténtalo de nuevo.');
+      if (err.response) {
+        console.error('Error response data:', err.response.data);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMyOrders();
+  }, []);
+
+  const handleUpdateStatus = async (orderId: string, newStatus: 'accepted' | 'picked_up' | 'on_way' | 'delivered') => {
+    try {
+      // Mapear el estado de la UI al estado del backend
+      let backendStatus = '';
+      switch (newStatus) {
+        case 'picked_up':
+          backendStatus = 'PICKED_UP';
+          break;
+        case 'on_way':
+          backendStatus = 'IN_TRANSIT';
+          break;
+        case 'delivered':
+          backendStatus = 'DELIVERED';
+          break;
+        default:
+          backendStatus = 'READY_FOR_PICKUP';
+      }
+      
+      // Si el nuevo estado es 'delivered', usar el método específico
+      if (newStatus === 'delivered') {
+        await deliveryAPI.markOrderAsDelivered(orderId);
+      } else if (newStatus === 'on_way') {
+        // Si el nuevo estado es 'on_way', usar el método específico para marcar como en tránsito
+        await deliveryAPI.markOrderAsInTransit(orderId);
+      } else {
+        // Para otros estados, usar el método de actualización de estado de la API
+        await deliveryAPI.updateOrderStatus(orderId, backendStatus);
+      }
+      
+      // Actualizar el estado local
+      setMyOrders(myOrders.map(order => 
+        order.id === orderId ? { ...order, status: newStatus } : order
+      ));
+      
+    } catch (err: any) {
+      console.error('Error updating order status:', err);
+      if (err.response) {
+        console.error('Error response data:', err.response.data);
+      }
+    }
+  };
+
+  if (loading && myOrders.length === 0) {
+    return (
+      <DeliveryLayout>
+        <div className="flex flex-col justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <span className="mt-4">Cargando tus órdenes...</span>
+        </div>
+      </DeliveryLayout>
+    );
+  }
 
   return (
     <DeliveryLayout>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">My Orders</h1>
-        <p className="text-gray-600">Manage your delivery orders</p>
+        <h1 className="text-3xl font-bold">Mis Órdenes</h1>
+        <p className="text-gray-600">Gestiona tus pedidos de entrega</p>
       </div>
 
-      <MyOrdersList
-        orders={myOrders}
-        onUpdateStatus={handleUpdateStatus}
-      />
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+          <button 
+            onClick={fetchMyOrders} 
+            className="ml-4 px-2 py-1 bg-red-200 text-red-800 rounded hover:bg-red-300 transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
+
+      {myOrders.length === 0 && !loading ? (
+        <div className="text-center py-10 bg-gray-50 rounded-lg">
+          <p className="text-xl text-gray-600">No tienes órdenes asignadas</p>
+          <p className="text-gray-500 mt-2">Revisa las órdenes disponibles para comenzar a entregar</p>
+        </div>
+      ) : (
+        <MyOrdersList
+          orders={myOrders}
+          onUpdateStatus={handleUpdateStatus}
+        />
+      )}
     </DeliveryLayout>
   );
 }
+
+
+
+
+
