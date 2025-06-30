@@ -1,36 +1,127 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Plataforma de Comercio Electrónico - Arquitectura de Microservicios
 
-## Getting Started
+## Descripción General
 
-First, run the development server:
+Este proyecto implementa una plataforma completa de comercio electrónico utilizando una arquitectura de microservicios. Cada componente está diseñado para funcionar de manera independiente, permitiendo escalabilidad, mantenimiento y desarrollo más eficientes.
+
+## Arquitectura
+
+![Arquitectura de Microservicios]
+
+### Componentes Principales
+
+| Servicio | Puerto | Descripción |
+|----------|--------|-------------|
+| Frontend (Next.js) | 3000 | Interfaz de usuario para clientes y tiendas |
+| Microservicio de Usuarios | 3001 | Gestión de usuarios, autenticación y perfiles |
+| Microservicio de Tienda | 3002 | Gestión de productos, pedidos y tiendas |
+
+## Tecnologías Utilizadas
+
+- **Frontend**: Next.js, React, TypeScript
+- **Backend**: NestJS, TypeScript
+- **Base de Datos**: MongoDB
+- **Autenticación**: JWT
+- **Comunicación**: REST API, TCP (microservicios)
+- **Documentación API**: Swagger
+- **Contenedores**: Docker (opcional)
+
+## Microservicios
+
+### 1. Frontend (insane)
+
+Aplicación web construida con Next.js que proporciona la interfaz de usuario para todos los tipos de usuarios.
 
 ```bash
+# Instalación
+cd insane
+npm install
+
+# Ejecución
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Características principales:**
+- Catálogo de productos
+- Carrito de compras
+- Gestión de pedidos
+- Panel de administración para tiendas
+- Autenticación de usuarios
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 2. Microservicio de Usuarios (microservicio-Usuario)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Gestiona la autenticación, registro y perfiles de usuarios.
 
-## Learn More
+```bash
+# Instalación
+cd microservicio-Usuario
+npm install
 
-To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Ejecución
+npm run start:dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Características principales:**
+- Registro y autenticación de usuarios
+- Gestión de perfiles
+- Roles y permisos
+- Recuperación de contraseña
+- Comunicación por microservicios (TCP puerto 3001)
 
-## Deploy on Vercel
+### 3. Microservicio de Tienda (store-microservice-f)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Gestiona productos, pedidos, proveedores y reseñas.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# Instalación
+cd store-microservice-f
+npm install
+
+# Ejecución
+npm run dev
+```
+
+**Características principales:**
+- Gestión de productos
+- Procesamiento de pedidos
+- Gestión de proveedores
+- Sistema de reseñas
+- Panel de estadísticas
+
+## Configuración de Base de Datos
+
+Todos los microservicios utilizan MongoDB. Asegúrate de tener MongoDB instalado y ejecutándose
+
+
+La base de datos predeterminada es `DbWeb` y se ejecuta en `localhost:27017`.
+
+## Flujo de Comunicación
+
+1. El cliente interactúa con el frontend (Next.js)
+2. El frontend se comunica con los microservicios a través de API REST
+3. Los microservicios se comunican entre sí mediante TCP cuando es necesario
+4. Cada microservicio gestiona su propia conexión a la base de datos
+
+## Endpoints Principales
+
+### Microservicio de Usuarios (http://localhost:3000/api)
+- **Autenticación**: `/auth/login`, `/auth/register`
+- **Usuarios**: `/users`, `/users/:id`
+- **Perfiles**: `/users/profile`
+
+### Microservicio de Tienda (http://localhost:3002/api/store)
+- **Productos**: `/products`, `/products/:id`
+- **Pedidos**: `/orders`, `/orders/:id`
+- **Proveedores**: `/suppliers`, `/suppliers/:id`
+- **Reseñas**: `/reviews`, `/reviews/:id`
+- **Dashboard**: `/dashboard`
+
+## Desarrollo
+
+### Requisitos Previos
+- Node.js (v16+)
+- MongoDB
+- npm o yarn
+
+
