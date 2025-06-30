@@ -50,6 +50,8 @@ export default function LoginForm() {
         router.push("/menu/store/dashboard")
       } else if (user.account_type === "delivery") {
         router.push("/menu/delivery/available")
+      } else if (user.account_type === "admin") {
+        router.push("/admin/dashboard")
       } else {
         router.push("/menu/catalog")
       }
