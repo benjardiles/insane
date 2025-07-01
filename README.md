@@ -1,3 +1,87 @@
+# Plataforma de Comercio Electrónico - Frontend
+
+## Descripción General
+Este proyecto implementa el frontend de una plataforma de comercio electrónico que se comunica con una arquitectura de microservicios. Desarrollado con Next.js, proporciona interfaces para clientes, tiendas, repartidores y administradores.
+
+## Requisitos previos
+- Node.js (v18+)
+- npm o yarn
+
+## Cómo levantar el servicio
+
+1. Clonar el repositorio:
+```bash
+git clone [url-del-repositorio]
+cd [nombre-del-repositorio]
+```
+
+2. Instalar dependencias:
+```bash
+npm install
+```
+
+3. Iniciar el servidor de desarrollo:
+```bash
+npm run dev
+```
+
+4. El frontend estará disponible en `http://localhost:3001`
+
+## Orden de inicio recomendado
+1. Base de datos MongoDB
+2. Microservicio de Usuarios
+3. Microservicio de Tienda
+4. Microservicio de Compras
+5. Frontend
+
+## Conexión con microservicios
+El frontend está configurado para conectarse a los siguientes microservicios:
+- Microservicio de Usuarios: `http://localhost:3000`
+- Microservicio de Tienda: `http://localhost:3002`
+- Microservicio de Compras: `http://localhost:3003`
+
+## Usuarios de prueba
+Puedes utilizar estos usuarios para probar la aplicación:
+
+| Rol | Email | Contraseña |
+|-----|-------|------------|
+| Cliente | cliente@test.com | password123 |
+| Tienda | tienda@test.com | password123 |
+| Repartidor | delivery@test.com | password123 |
+| Admin | admin@test.com | admin123 |
+
+## Funcionalidades por rol
+
+### Cliente
+- Navegar por el catálogo de productos
+- Añadir productos al carrito
+- Realizar pedidos
+- Ver historial de pedidos
+
+### Tienda
+- Gestionar productos
+- Recibir y procesar pedidos
+- Ver estadísticas de ventas
+
+### Repartidor
+- Ver pedidos disponibles para entrega
+- Actualizar estado de entregas
+
+### Administrador
+- Gestionar usuarios
+- Supervisar pedidos
+- Ver estadísticas generales
+
+## Estructura del proyecto
+El proyecto sigue la estructura estándar de Next.js con:
+- `/src/app`: Páginas y rutas de la aplicación
+- `/src/components`: Componentes reutilizables
+- `/src/services`: Servicios para comunicación con APIs
+- `/src/contexts`: Contextos de React para estado global
+- `/src/store`: Estado global con Zustand
+
+
+
 # Plataforma de Comercio Electrónico - Arquitectura de Microservicios
 
 ## Descripción General
