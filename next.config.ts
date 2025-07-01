@@ -2,10 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   skipTrailingSlashRedirect: true,
-  devIndicators: {
-    buildActivity: false,
-    buildActivityPosition: "bottom-right",
-  },
+  devIndicators: false,
 };
 
 export default nextConfig;
