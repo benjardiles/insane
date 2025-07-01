@@ -10,6 +10,7 @@ import { useCartStore } from '@/store/cartStore';
 import { ordersAPI, CreateOrderDto } from '@/services/api/orders';
 import { Loader2, User, Phone, Mail, MapPin, Trash2, Plus, Minus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { StoreAPI } from '@/services/api/store';
 
 export default function CartPage() {
   // Usar el store de Zustand para el carrito
@@ -154,7 +155,10 @@ export default function CartPage() {
       
       // Crear pedido
       console.log('Creando pedido...');
-      const order = await ordersAPI.createOrder(orderData);
+      const order = await ordersAPI.createOrder({
+        ...orderData,
+        deliveryMethod: deliveryMethod as "PICKUP" | "DELIVERY"
+      });
       console.log('Respuesta de creación de pedido:', JSON.stringify(order, null, 2));
       
       // Limpiar el carrito local después de crear el pedido
@@ -166,6 +170,21 @@ export default function CartPage() {
       
       // Opcional: Puedes mostrar un mensaje adicional con el ID del pedido
       showNotification(`Tu número de pedido es: ${order.id}`, 'info');
+      
+      // Actualizar el stock de cada producto comprado
+      try {
+        const storeAPI = new StoreAPI();
+        
+        // Para cada item en el carrito, actualizar su stock
+        for (const item of items) {
+          await storeAPI.updateProductStock(item.id, item.quantity);
+          console.log(`Stock actualizado para producto ${item.id}, cantidad: ${item.quantity}`);
+        }
+      } catch (stockError) {
+        console.error('Error al actualizar el stock de productos:', stockError);
+        // No interrumpimos el flujo si falla la actualización de stock
+        // pero lo registramos para depuración
+      }
       
       // No hacemos router.push, el usuario permanece en la página actual
       console.log('Pedido completado, permaneciendo en la página actual');
@@ -377,12 +396,4 @@ export default function CartPage() {
     </ClientLayout>
   );
 }
-
-
-
-
-
-
-
-
 

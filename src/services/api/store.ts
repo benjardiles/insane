@@ -434,6 +434,29 @@ async getAllPublicProducts(page = 1, limit = 10, search = '', category = '') {
   }
 }
 
+// Añadir un nuevo método para actualizar el stock después de una compra
+async updateProductStock(productId: string, quantityPurchased: number) {
+  try {
+    // Primero obtenemos el producto actual para conocer su stock
+    const product = await this.getProduct(productId);
+    
+    // Calculamos el nuevo stock
+    const newStock = Math.max(0, product.stock - quantityPurchased);
+    
+    // Actualizamos solo el campo de stock
+    const response = await axios.patch(
+      `${this.baseURL}/products/${productId}`, 
+      { stock: newStock },
+      { headers: this.getHeaders() }
+    );
+    
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating stock for product ${productId}:`, error);
+    throw error;
+  }
+}
+
 }
 
 export const storeAPI = new StoreAPI();

@@ -82,7 +82,7 @@ El proyecto sigue la estructura estándar de Next.js con:
 
 
 
-# Plataforma de Comercio Electrónico - Arquitectura de Microservicios
+# Plataforma de Comercio Electrónico - Arquitectura de Microservicios (RESUMEN TODO EL PROYECTO)
 
 ## Descripción General
 
